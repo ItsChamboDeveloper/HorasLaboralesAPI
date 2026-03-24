@@ -36,7 +36,7 @@ public class CloudinaryController {
                     "url", imageUrl
             ));
         } catch (IOException e) {
-            // Si hay un error, retorna 500 Internal Server Error con un mensaje
+            // Si hay un error, retorna 500 Internal Server Error con un mensajes
             return ResponseEntity.internalServerError().body("Error al subir la imagen");
         }
     }
