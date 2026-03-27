@@ -2,7 +2,9 @@ package HorasLaborales.demo.Config.Crypto;
 
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
+import org.springframework.stereotype.Component;
 
+@Component
 public class Argon2Password {
 
     //Configuracion recomendada para Argon2id
