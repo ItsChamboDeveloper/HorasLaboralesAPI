@@ -172,17 +172,11 @@ public class InstructorAuthenticationController {
     @PostMapping("/logoutInstructor")
     public ResponseEntity<String> logoutInstructor(HttpServletRequest request, HttpServletResponse response) {
         try {
-            // Crear cookie de expiración con SameSite=None
-            String cookieValue = "authToken=; Path=/; HttpOnly; Secure; SameSite=None; MaxAge=0; Domain=sistemaweb-sgma.vercel.app";
+            // Crear cookie de expiración
+            String cookieValue = "authToken=; Path=/; HttpOnly; Secure=false; SameSite=None; MaxAge=0;";
 
             response.addHeader("Set-Cookie", cookieValue);
             response.addHeader("Access-Control-Expose-Headers", "Set-Cookie");
-
-            // Headers CORS para la respuesta
-            String origin = request.getHeader("Origin");
-            if (origin != null && isValidOrigin(origin)) {
-                response.setHeader("Access-Control-Allow-Origin", origin);
-            }
 
             return ResponseEntity.ok("Logout exitoso");
 
@@ -191,12 +185,6 @@ public class InstructorAuthenticationController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error durante logout");
         }
-    }
-
-    private boolean isValidOrigin(String origin) {
-        return origin.contains("localhost") ||
-                origin.contains("herokuapp.com") ||
-                origin.contains("vercel.app");
     }
 
 }

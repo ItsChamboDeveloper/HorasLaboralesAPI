@@ -1,6 +1,7 @@
 package HorasLaborales.demo.Config.Cors;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -8,6 +9,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
+@Configuration
 public class CorsConfig {
     // ✅ ELIMINA UNO DE LOS BEANS - ELIGE ESTE (más completo)
     @Bean
@@ -15,8 +17,13 @@ public class CorsConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // ✅ ORÍGENES PERMITIDOS COMPLETOS
-        configuration.setAllowedOriginPatterns(List.of(
-
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000",  // React dev server
+                "http://localhost:4200",  // Angular dev server
+                "http://localhost:8080",  // Spring Boot
+                "https://sistemaweb-sgma.vercel.app",  // Vercel production
+                "https://sgma-66ec41075156.herokuapp.com",  // Heroku production
+                "https://localhost/"
         ));
 
         // ✅ MÉTODOS PERMITIDOS

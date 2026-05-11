@@ -191,18 +191,12 @@ public class StudentAuthenticationController {
 
     @PostMapping("/logoutStudent")
     public ResponseEntity<String> logoutStudent(HttpServletRequest request, HttpServletResponse response) {
-        // Crear cookie de expiración con SameSite=None
-        String cookieValue = "authToken=; Path=/; HttpOnly; Secure; SameSite=None; MaxAge=0; Domain=sgma-66ec41075156.herokuapp.com";
+        // Crear cookie de expiración
+        String cookieValue = "authToken=; Path=/; HttpOnly; Secure=false; SameSite=None; MaxAge=0;";
 
         response.addHeader("Set-Cookie", cookieValue);
         response.addHeader("Access-Control-Expose-Headers", "Set-Cookie");
 
-        // También agregar headers CORS para la respuesta
-        String origin = request.getHeader("Origin");
-        if (origin != null &&
-                (origin.contains("localhost") || origin.contains("herokuapp.com"))) {
-            response.setHeader("Access-Control-Allow-Origin", origin);
-        }
         return ResponseEntity.ok()
                 .body("Logout exitoso");
     }
