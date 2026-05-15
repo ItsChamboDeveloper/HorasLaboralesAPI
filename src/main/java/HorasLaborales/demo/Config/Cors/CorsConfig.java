@@ -21,6 +21,7 @@ public class CorsConfig {
                 "http://localhost:3000",  // React dev server
                 "http://localhost:4200",  // Angular dev server
                 "http://localhost:8080",  // Spring Boot
+                "http://localhost",       // XAMPP
                 "https://sistemaweb-sgma.vercel.app",  // Vercel production
                 "https://sgma-66ec41075156.herokuapp.com",  // Heroku production
                 "https://localhost/"
