@@ -86,6 +86,9 @@ public class StudentAuthenticationController {
                     roleName = null;
                 }
             }
+            if (roleName == null || roleName.isBlank()) {
+                roleName = "Alumno";
+            }
 
             // Obtener group (grade) de forma segura
             String group = null;

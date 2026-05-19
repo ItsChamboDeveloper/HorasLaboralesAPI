@@ -19,9 +19,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 @Component
 public class JwtCookieAuthFilter extends OncePerRequestFilter {
@@ -69,9 +71,30 @@ public class JwtCookieAuthFilter extends OncePerRequestFilter {
             // EXTRAER EL LEVEL REAL del token
             String level = jwtUtils.extractLevel(token);
 
-            // CORREGIDO - Crear authorities correctamente
-            Collection<? extends GrantedAuthority> authorities =
-                    Collections.singletonList(new SimpleGrantedAuthority("ROLES_" + role));
+            // CORREGIDO - Crear authorities de forma robusta mapeando roles de base de datos a Spring Security
+            List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+            if (role != null && !role.isBlank()) {
+                String primaryRole = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+                authorities.add(new SimpleGrantedAuthority(primaryRole));
+
+                // Mapear compatibilidad de idioma y roles para base de datos
+                String cleanRole = role.replace("ROLE_", "").trim();
+                if (cleanRole.equalsIgnoreCase("Students") || cleanRole.equalsIgnoreCase("Student") || cleanRole.equalsIgnoreCase("Alumno")) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_Alumno"));
+                } else if (cleanRole.equalsIgnoreCase("Instructors") || cleanRole.equalsIgnoreCase("Instructor") || cleanRole.equalsIgnoreCase("Docente")) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_Docente"));
+                    authorities.add(new SimpleGrantedAuthority("ROLE_Animador"));
+                    authorities.add(new SimpleGrantedAuthority("ROLE_Coordinador"));
+                } else if (cleanRole.equalsIgnoreCase("Leader") || cleanRole.equalsIgnoreCase("Lider")) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_Coordinador"));
+                    authorities.add(new SimpleGrantedAuthority("ROLE_Animador"));
+                } else if (cleanRole.equalsIgnoreCase("Admin")) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_Coordinador"));
+                    authorities.add(new SimpleGrantedAuthority("ROLE_Admin"));
+                }
+            } else {
+                authorities.add(new SimpleGrantedAuthority("ROLE_Alumno"));
+            }
 
             // CREAR AUTENTICACIÓN CON AUTHORITIES CORRECTOS
             UsernamePasswordAuthenticationToken authentication =

@@ -24,7 +24,8 @@ public class CorsConfig {
                 "http://localhost",       // XAMPP
                 "https://sistemaweb-sgma.vercel.app",  // Vercel production
                 "https://sgma-66ec41075156.herokuapp.com",  // Heroku production
-                "https://localhost/"
+                "https://localhost/",
+                "https://localhost"
         ));
 
         // ✅ MÉTODOS PERMITIDOS
