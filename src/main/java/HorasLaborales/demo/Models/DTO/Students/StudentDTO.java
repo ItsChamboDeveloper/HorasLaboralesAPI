@@ -41,10 +41,11 @@ public class StudentDTO {
     private String lastName;
 
     //Validaciones para el correo institucional del estudiante
+    /** Solo por mientras arreglo STMP
     @Pattern(
             regexp = "^[0-9]{8}@ricaldone\\.edu\\.sv$", // Expresión regular para validar el formato del correo institucional
             message = "Debe ser un correo institucional válido" // Mensaje de error si el formato no es correcto
-    )
+    )**/
     @NotBlank // Validación para que el campo no esté vacío o solo contenga espacios en blanco
     //Se omite @Size ya qué Pattern valida el tamaño, en este caso exacto los 27 caracteres del correo institucional.
     private String email;

@@ -10,6 +10,8 @@ import HorasLaborales.demo.Models.DTO.Vehicles.VehicleDTO;
 import HorasLaborales.demo.Repositories.Students.StudentsRepository;
 import HorasLaborales.demo.Repositories.VehicleType.VehicleTypeRepository;
 import HorasLaborales.demo.Repositories.Vehicles.VehicleRepository;
+import HorasLaborales.demo.Repositories.Instructors.InstructorRepository;
+import HorasLaborales.demo.Services.Email.EmailService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,12 @@ public class VehicleService {
 
     @Autowired
     private StudentsRepository studentsRepository;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private InstructorRepository instructorRepository;
 
     //*** MÉTODOS PRINCIPALES ***\\
 
@@ -73,16 +81,165 @@ public class VehicleService {
         }
 
         VehicleEntity objEntity = convertToEntity(json);
+        objEntity.setStatus(1L); // Estado 1: Aprobación del Animador
         VehicleEntity saveVehicle = vehicleRepository.save(objEntity);
+
+        // Buscar correo del Animador (Rol 4) y notificar
+        try {
+            List<String> correosAnimadores = instructorRepository.findEmailByRolId(4L);
+            String studentName = "";
+            if (saveVehicle.getStudentId() != null) {
+                studentName = saveVehicle.getStudentId().getFirstName() + " " + saveVehicle.getStudentId().getLastName();
+            }
+            for (String correoAnimador : correosAnimadores) {
+                emailService.enviarNotificacion(
+                    correoAnimador,
+                    "Nuevo Vehículo requiere aprobación",
+                    "El estudiante " + studentName + " ha registrado un vehículo y requiere tu revisión."
+                );
+            }
+        } catch (Exception e) {
+            log.error("Error al enviar notificación al animador en createVehicle", e);
+        }
 
         return convertToDTO(saveVehicle);
     }
+
+    // 1. Estudiante crea vehículo (con flujo de aprobación inicial y correo)
+    public VehicleDTO crearVehiculo(VehicleDTO json) {
+        if (verifyVehicleExist(json.getPlateNumber())) {
+            throw new ExceptionPlateNumberDuplicated("El número de placa ya existe en el sistema");
+        }
+
+        VehicleEntity objEntity = convertToEntity(json);
+        objEntity.setStatus(1L); // Estado 1: Aprobación del Animador
+        VehicleEntity saveVehicle = vehicleRepository.save(objEntity);
+
+        // Buscar correo del Animador (Rol 4)
+        List<String> correosAnimadores = instructorRepository.findEmailByRolId(4L);
+        String studentName = "";
+        if (saveVehicle.getStudentId() != null) {
+            studentName = saveVehicle.getStudentId().getFirstName() + " " + saveVehicle.getStudentId().getLastName();
+        }
+        for (String correoAnimador : correosAnimadores) {
+            emailService.enviarNotificacion(
+                correoAnimador,
+                "Nuevo Vehículo requiere aprobación",
+                "El estudiante " + studentName + " ha registrado un vehículo y requiere tu revisión."
+            );
+        }
+        return convertToDTO(saveVehicle);
+    }
+
+    // 2. Animador revisa (Estado 1)
+    public void revisionAnimador(Long vehiculoId, boolean aprobado) {
+        VehicleEntity vehiculo = vehicleRepository.findById(vehiculoId)
+                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
+        
+        if (aprobado) {
+            vehiculo.setStatus(2L); // Pasa a Estado 2: Aprobación de Coordinadora
+            List<String> correosCoordinadora = instructorRepository.findEmailByRolId(3L); // Rol 3: Admin (Coordinadora)
+            
+            String studentName = "";
+            if (vehiculo.getStudentId() != null) {
+                studentName = vehiculo.getStudentId().getFirstName() + " " + vehiculo.getStudentId().getLastName();
+            }
+            for (String correoCoordinadora : correosCoordinadora) {
+                emailService.enviarNotificacion(
+                    correoCoordinadora,
+                    "Vehículo aprobado por Animador - Requiere tu firma",
+                    "El vehículo de " + studentName + " fue aprobado por el Animador y espera tu aprobación final."
+                );
+            }
+        } else {
+            vehiculo.setStatus(4L); // Id asignado a Rechazado en tu BD
+            if (vehiculo.getStudentId() != null) {
+                emailService.enviarNotificacion(
+                    vehiculo.getStudentId().getEmail(),
+                    "Vehículo Rechazado por el Animador",
+                    "Tu vehículo ha sido rechazado por el Animador. Por favor revisa el sistema."
+                );
+            }
+        }
+        vehicleRepository.save(vehiculo);
+    }
+
+    // 3. Coordinadora revisa (Estado 2)
+    public void revisionCoordinadora(Long vehiculoId, boolean aprobado) {
+        VehicleEntity vehiculo = vehicleRepository.findById(vehiculoId)
+                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
+        
+        if (aprobado) {
+            vehiculo.setStatus(3L); // Id asignado a Aprobado Final en tu BD (3L = Aprobado)
+            if (vehiculo.getStudentId() != null) {
+                emailService.enviarNotificacion(
+                    vehiculo.getStudentId().getEmail(),
+                    "¡Vehículo Aprobado por Coordinación!",
+                    "Felicidades, tu vehículo ha completado el flujo de aprobación exitosamente."
+                );
+            }
+        } else {
+            vehiculo.setStatus(4L); // Rechazado (4L = Rechazado)
+            if (vehiculo.getStudentId() != null) {
+                emailService.enviarNotificacion(
+                    vehiculo.getStudentId().getEmail(),
+                    "Vehículo Rechazado por Coordinación",
+                    "Tu vehículo ha sido rechazado en la fase final por la Coordinadora."
+                );
+            }
+        }
+        vehicleRepository.save(vehiculo);
+    }
+
     // Método para actualizar el estado de un vehículo
     public VehicleDTO updateVehicleStatus(Long vehicleId, Long newStatus) {
         VehicleEntity vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
+        
+        Long previousStatus = vehicle.getStatus();
         vehicle.setStatus(newStatus);
         VehicleEntity updated = vehicleRepository.save(vehicle);
+
+        // Disparar correos según la transición de estado
+        try {
+            String studentName = "";
+            if (updated.getStudentId() != null) {
+                studentName = updated.getStudentId().getFirstName() + " " + updated.getStudentId().getLastName();
+            }
+
+            if (newStatus == 2L) {
+                // Animador aprueba -> Correo a Coordinadora (Rol 3)
+                List<String> correosCoordinadora = instructorRepository.findEmailByRolId(3L);
+                for (String correoCoordinadora : correosCoordinadora) {
+                    emailService.enviarNotificacion(
+                        correoCoordinadora,
+                        "Vehículo aprobado por Animador - Requiere tu firma",
+                        "El vehículo de " + studentName + " fue aprobado por el Animador y espera tu aprobación final."
+                    );
+                }
+            } else if (newStatus == 3L) {
+                // Coordinadora aprueba / Aprobado -> Correo a Estudiante
+                if (updated.getStudentId() != null) {
+                    emailService.enviarNotificacion(
+                        updated.getStudentId().getEmail(),
+                        "¡Vehículo Aprobado!",
+                        "Felicidades, tu vehículo ha completado el flujo de aprobación exitosamente."
+                    );
+                }
+            } else if (newStatus == 4L) {
+                // Rechazado (por Animador o Coordinadora) -> Correo a Estudiante
+                if (updated.getStudentId() != null) {
+                    emailService.enviarNotificacion(
+                        updated.getStudentId().getEmail(),
+                        "Vehículo Rechazado",
+                        "Tu vehículo ha sido rechazado en el flujo de aprobación. Por favor revisa el sistema."
+                    );
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error al enviar correo en updateVehicleStatus", e);
+        }
+
         return convertToDTO(updated);
     }
 

@@ -36,10 +36,11 @@ public class InstructorDTO {
     private String lastName;
 
     //Validaciones para el correo institucional del instructor
+    /** Solo por mientras arreglo STMP
     @Pattern(
             regexp = "^[A-Za-z_]+@ricaldone\\.edu\\.sv$", //  Validación para correos institucionales que pueden contener letras y guion bajo
             message = "Debe ser un correo institucional de instructor válido" // Mensaje de error si el formato no es correcto
-    )
+    )**/
     @NotBlank // Validación para que el campo no esté vacío o solo contenga espacios en blanco
     private String email;
 

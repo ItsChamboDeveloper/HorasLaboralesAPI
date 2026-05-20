@@ -30,6 +30,10 @@ public class SecurityConfig {
     private static final String levels         = "/api/levels";
     private static final String observations   = "/api/observations";
     private static final String workOrders     = "/api/workOrders";
+    private static final String vehiculosBase  = "/vehiculos";
+    private static final String vehiculosApi   = "/api/vehiculos";
+    private static final String workOrdersBase = "/work-orders";
+    private static final String workOrdersApi  = "/api/work-orders";
 
     private final JwtCookieAuthFilter jwtCookieAuthFilter;
     private final CorsConfigurationSource corsConfigurationSource;
@@ -95,6 +99,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,   workOrders + "/newWorkOrder").hasAuthority("ROLE_Alumno")
                         .requestMatchers(HttpMethod.PUT,    workOrders + "/updateWorkOrder/*").hasAuthority("ROLE_Alumno")
                         .requestMatchers(HttpMethod.DELETE, workOrders + "/deleteWorkOrder/*").hasAuthority("ROLE_Alumno")
+
+                        // ── WORKFLOW VEHICULOS ────────────────────────────────────
+                        .requestMatchers(HttpMethod.POST, vehiculosBase, vehiculosApi).hasAuthority("ROLE_Alumno")
+                        .requestMatchers(HttpMethod.POST, vehiculosBase + "/*/revision-animador", vehiculosApi + "/*/revision-animador").hasAnyAuthority("ROLE_Animador", "ROLE_Docente", "ROLE_Coordinador")
+                        .requestMatchers(HttpMethod.POST, vehiculosBase + "/*/revision-coordinadora", vehiculosApi + "/*/revision-coordinadora").hasAnyAuthority("ROLE_Coordinador", "ROLE_Animador")
+
+                        // ── WORKFLOW WORK ORDERS ──────────────────────────────────
+                        .requestMatchers(HttpMethod.POST, workOrdersBase, workOrdersApi).hasAuthority("ROLE_Alumno")
+                        .requestMatchers(HttpMethod.POST, workOrdersBase + "/*/revision-animador", workOrdersApi + "/*/revision-animador").hasAnyAuthority("ROLE_Animador", "ROLE_Docente", "ROLE_Coordinador")
+                        .requestMatchers(HttpMethod.POST, workOrdersBase + "/*/revision-coordinadora", workOrdersApi + "/*/revision-coordinadora").hasAnyAuthority("ROLE_Coordinador", "ROLE_Animador")
+                        .requestMatchers(HttpMethod.POST, workOrdersBase + "/*/accion-estudiante", workOrdersApi + "/*/accion-estudiante").hasAuthority("ROLE_Alumno")
 
                         .anyRequest().authenticated()
                 )

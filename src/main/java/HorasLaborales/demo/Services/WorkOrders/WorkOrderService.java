@@ -11,6 +11,10 @@ import HorasLaborales.demo.Models.DTO.WorkOrders.WorkOrderDTO;
 import HorasLaborales.demo.Repositories.Modules.ModuleRepository;
 import HorasLaborales.demo.Repositories.Vehicles.VehicleRepository;
 import HorasLaborales.demo.Repositories.WorkOrders.WorkOrderRepository;
+import HorasLaborales.demo.Repositories.Instructors.InstructorRepository;
+import HorasLaborales.demo.Repositories.Observations.ObservationRepository;
+import HorasLaborales.demo.Services.Email.EmailService;
+import HorasLaborales.demo.Entities.Observation.ObservationEntity;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,12 +32,18 @@ public class WorkOrderService {
     private final WorkOrderRepository repo;
     private final VehicleRepository vehicleRepository;
     private final ModuleRepository moduleRepository;
+    private final InstructorRepository instructorRepository;
+    private final EmailService emailService;
+    private final ObservationRepository observationRepository;
 
     @Autowired
-    public WorkOrderService(WorkOrderRepository repo, VehicleRepository vehicleRepository, ModuleRepository moduleRepository) {
+    public WorkOrderService(WorkOrderRepository repo, VehicleRepository vehicleRepository, ModuleRepository moduleRepository, InstructorRepository instructorRepository, EmailService emailService, ObservationRepository observationRepository) {
         this.repo = repo;
         this.vehicleRepository = vehicleRepository;
         this.moduleRepository = moduleRepository;
+        this.instructorRepository = instructorRepository;
+        this.emailService = emailService;
+        this.observationRepository = observationRepository;
     }
 
     public Page<WorkOrderDTO> getAllWorkOrders(int page, int size) {
@@ -52,6 +62,7 @@ public class WorkOrderService {
                     json.getEstimatedTime(), json.getDescription(), json.getVehicleId(), json.getModuleId(), json.getIdStatus());
 
             WorkOrderEntity objData = ConvertirAEntity(json);
+            objData.setIdStatus(1L); // Estado 1: Aprobación del Animador
 
             // Log de la entidad antes de guardar
             log.info("Insert - Entity to save: estimatedTime='{}', description='{}', vehicleId='{}', moduleId='{}', idStatus='{}'",
@@ -65,12 +76,138 @@ public class WorkOrderService {
             // Log de la entidad retornada por JPA después de guardar
             log.info("Insert - Entity saved: workOrderId='{}', estimatedTime='{}', description='{}', idStatus='{}'",
                     workOrderEntity.getWorkOrderId(), workOrderEntity.getEstimatedTime(), workOrderEntity.getDescription(), workOrderEntity.getIdStatus());
+
+            // Buscar correo del Animador (Rol 4) y notificar
+            try {
+                List<String> correosAnimadores = instructorRepository.findEmailByRolId(4L);
+                String studentName = "";
+                if (workOrderEntity.getVehicleId() != null && workOrderEntity.getVehicleId().getStudentId() != null) {
+                    studentName = workOrderEntity.getVehicleId().getStudentId().getFirstName() + " " + workOrderEntity.getVehicleId().getStudentId().getLastName();
+                }
+                for (String correoAnimador : correosAnimadores) {
+                    emailService.enviarNotificacion(
+                        correoAnimador,
+                        "Nueva Work Order Creada",
+                        "El estudiante " + studentName + " creó una nueva orden de trabajo pendiente de revisión."
+                    );
+                }
+            } catch (Exception e) {
+                log.error("Error al enviar notificación al animador en insert", e);
+            }
+
             return ConvertirADTO(workOrderEntity);
         } catch (Exception e) {
             log.error("Error al registrar una Orden de Trabajo " + e.getMessage(), e);
             throw new ExceptionWorkOrdernotRegistred("La orden de trabajo no pudo ser registrada");
         }
 
+    }
+
+    // 1. Estudiante crea Work Order
+    public WorkOrderDTO crearWorkOrder(WorkOrderDTO json) {
+        if (json == null) {
+            throw new IllegalArgumentException("La orden de trabajo debe ser llenada con cada campo requerido");
+        }
+        try {
+            WorkOrderEntity objData = ConvertirAEntity(json);
+            objData.setIdStatus(1L); // Estado 1: Aprobación del Animador
+            WorkOrderEntity saved = repo.save(objData);
+
+            // Buscar correo del Animador (Rol 4)
+            List<String> correosAnimadores = instructorRepository.findEmailByRolId(4L);
+            String studentName = "";
+            if (saved.getVehicleId() != null && saved.getVehicleId().getStudentId() != null) {
+                studentName = saved.getVehicleId().getStudentId().getFirstName() + " " + saved.getVehicleId().getStudentId().getLastName();
+            }
+
+            for (String correoAnimador : correosAnimadores) {
+                emailService.enviarNotificacion(
+                    correoAnimador,
+                    "Nueva Work Order Creada",
+                    "El estudiante " + studentName + " creó una nueva orden de trabajo pendiente de revisión."
+                );
+            }
+            return ConvertirADTO(saved);
+        } catch (Exception e) {
+            log.error("Error al registrar una Orden de Trabajo " + e.getMessage(), e);
+            throw new ExceptionWorkOrdernotRegistred("La orden de trabajo no pudo ser registrada");
+        }
+    }
+
+    // 2. Animador revisa (Estado 1)
+    public void revisionAnimador(Long woId, boolean aprobado) {
+        WorkOrderEntity wo = repo.findById(woId)
+                .orElseThrow(() -> new ExceptionWorkOrdernotfound("Work Order no encontrada"));
+        if (aprobado) {
+            wo.setIdStatus(2L); // Estado 2: Aprobación de Coordinadora
+            List<String> correosCoord = instructorRepository.findEmailByRolId(3L);
+            for (String correoCoord : correosCoord) {
+                emailService.enviarNotificacion(correoCoord, "Work Order aprobada por Animador", "Requiere tu visto bueno final.");
+            }
+        } else {
+            wo.setIdStatus(5L); // Estado 5: Rechazado
+            if (wo.getVehicleId() != null && wo.getVehicleId().getStudentId() != null) {
+                emailService.enviarNotificacion(wo.getVehicleId().getStudentId().getEmail(), "Work Order Rechazada", "El animador rechazó tu Work Order.");
+            }
+        }
+        repo.save(wo);
+    }
+
+    // 3. Coordinadora revisa (Estado 2)
+    public void revisionCoordinadora(Long woId, boolean aprobado) {
+        WorkOrderEntity wo = repo.findById(woId)
+                .orElseThrow(() -> new ExceptionWorkOrdernotfound("Work Order no encontrada"));
+        if (aprobado) {
+            wo.setIdStatus(3L); // Estado 3: Aprobado - En Progreso
+            if (wo.getVehicleId() != null && wo.getVehicleId().getStudentId() != null) {
+                emailService.enviarNotificacion(wo.getVehicleId().getStudentId().getEmail(), "Work Order Aprobada Completamente", "Tu orden está lista.");
+            }
+        } else {
+            wo.setIdStatus(5L); // Estado 5: Rechazado
+            if (wo.getVehicleId() != null && wo.getVehicleId().getStudentId() != null) {
+                emailService.enviarNotificacion(wo.getVehicleId().getStudentId().getEmail(), "Work Order Rechazada por Coordinación", "Revisa los comentarios de la Coordinadora.");
+            }
+        }
+        repo.save(wo);
+    }
+
+    // 4. Observación o Finalización por parte del Estudiante
+    public void registrarObservacionOFinalizar(Long woId, String accion, String comentario) {
+        WorkOrderEntity wo = repo.findById(woId)
+                .orElseThrow(() -> new ExceptionWorkOrdernotfound("Work Order no encontrada"));
+        
+        if (accion.equalsIgnoreCase("FINALIZAR")) {
+            wo.setIdStatus(4L); // Estado 4: Completado
+        } else {
+            // Guardar observación en la BD
+            ObservationEntity obs = new ObservationEntity();
+            obs.setWorkOrderId(wo);
+            obs.setObservacion(comentario);
+            if (wo.getVehicleId() != null && wo.getVehicleId().getStudentId() != null) {
+                obs.setStudentId(wo.getVehicleId().getStudentId());
+            }
+            observationRepository.save(obs);
+        }
+        repo.save(wo);
+
+        // Buscar correos para duplicar la notificación
+        List<String> correosAnimadores = instructorRepository.findEmailByRolId(4L);
+        List<String> correosCoordinadoras = instructorRepository.findEmailByRolId(3L);
+        
+        String studentName = "";
+        if (wo.getVehicleId() != null && wo.getVehicleId().getStudentId() != null) {
+            studentName = wo.getVehicleId().getStudentId().getFirstName() + " " + wo.getVehicleId().getStudentId().getLastName();
+        }
+        
+        String asunto = "Work Order Actualizada por Estudiante - Acción: " + accion;
+        String cuerpo = "El estudiante " + studentName + " ejecutó la acción [" + accion + "] en la Work Order ID: " + woId + ".\nObservación: " + comentario;
+
+        for (String correoAnimador : correosAnimadores) {
+            emailService.enviarNotificacion(correoAnimador, asunto, cuerpo);
+        }
+        for (String correoCoordinadora : correosCoordinadoras) {
+            emailService.enviarNotificacion(correoCoordinadora, asunto, cuerpo);
+        }
     }
 
     public boolean delete(Long id) {
@@ -140,11 +277,62 @@ public class WorkOrderService {
             throw new IllegalArgumentException("El nuevo estado no puede ser nulo");
         }
 
-        // Aplicar y persistir sin restricciones adicionales
         Long previousStatus = workOrder.getIdStatus();
         workOrder.setIdStatus(newStatus);
         WorkOrderEntity saved = repo.save(workOrder);
         log.info("UpdateStatus - saved workOrderId={}, previousStatus={}, newStatus={}", saved.getWorkOrderId(), previousStatus, saved.getIdStatus());
+
+        // Disparar correos según la transición de estado
+        try {
+            String studentName = "";
+            String studentEmail = "";
+            if (saved.getVehicleId() != null && saved.getVehicleId().getStudentId() != null) {
+                studentName = saved.getVehicleId().getStudentId().getFirstName() + " " + saved.getVehicleId().getStudentId().getLastName();
+                studentEmail = saved.getVehicleId().getStudentId().getEmail();
+            }
+
+            if (newStatus == 2L) {
+                // Animador aprueba -> Correo a Coordinadora (Rol 3)
+                List<String> correosCoord = instructorRepository.findEmailByRolId(3L);
+                for (String correoCoord : correosCoord) {
+                    emailService.enviarNotificacion(
+                        correoCoord,
+                        "Work Order aprobada por Animador",
+                        "La Work Order del estudiante " + studentName + " ha sido aprobada por el Animador y requiere tu aprobación final."
+                    );
+                }
+            } else if (newStatus == 3L) {
+                // Coordinadora aprueba / Aprobado - En Progreso -> Correo a Estudiante
+                if (studentEmail != null && !studentEmail.isEmpty()) {
+                    emailService.enviarNotificacion(
+                        studentEmail,
+                        "Work Order Aprobada - En Progreso",
+                        "Felicidades, tu orden de trabajo ha sido aprobada por la Coordinadora y se encuentra en progreso."
+                    );
+                }
+            } else if (newStatus == 5L) {
+                // Rechazado -> Correo a Estudiante
+                if (studentEmail != null && !studentEmail.isEmpty()) {
+                    emailService.enviarNotificacion(
+                        studentEmail,
+                        "Work Order Rechazada",
+                        "Tu Work Order ha sido rechazada en el flujo de aprobación. Por favor revisa el sistema."
+                    );
+                }
+            } else if (newStatus == 4L) {
+                // Completado -> Correo a Estudiante
+                if (studentEmail != null && !studentEmail.isEmpty()) {
+                    emailService.enviarNotificacion(
+                        studentEmail,
+                        "Work Order Completada",
+                        "Tu orden de trabajo ha sido completada con éxito."
+                    );
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error al enviar correo en updateWorkOrderStatus", e);
+        }
+
         return ConvertirADTO(saved);
     }
 

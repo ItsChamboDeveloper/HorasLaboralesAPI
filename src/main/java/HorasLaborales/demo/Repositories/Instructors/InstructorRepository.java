@@ -6,7 +6,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 @Repository
 public interface InstructorRepository extends JpaRepository<InstructorEntity, Long> {
@@ -19,5 +22,8 @@ public interface InstructorRepository extends JpaRepository<InstructorEntity, Lo
 
     boolean existsByFirstName(String firstName);
     boolean existsByEmail(String email);
+
+    @Query("SELECT i.email FROM InstructorEntity i WHERE i.roleId.roleId = :roleId")
+    List<String> findEmailByRolId(@Param("roleId") Long roleId);
 
 }
