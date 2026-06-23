@@ -136,18 +136,22 @@ public class WorkOrderService {
 
     // 2. Animador revisa (Estado 1)
     public void revisionAnimador(Long woId, boolean aprobado) {
+        revisionAnimador(woId, aprobado, null);
+    }
+
+    public void revisionAnimador(Long woId, boolean aprobado, String motivo) {
         WorkOrderEntity wo = repo.findById(woId)
                 .orElseThrow(() -> new ExceptionWorkOrdernotfound("Work Order no encontrada"));
         if (aprobado) {
             wo.setIdStatus(2L); // Estado 2: Aprobación de Coordinadora
             List<String> correosCoord = instructorRepository.findEmailByRolId(3L);
             for (String correoCoord : correosCoord) {
-                emailService.enviarNotificacion(correoCoord, "Work Order aprobada por Animador", "Requiere tu visto bueno final.");
+                emailService.enviarNotificacionConDetalles(correoCoord, "Work Order aprobada por Animador", "Requiere tu visto bueno final.", motivo);
             }
         } else {
             wo.setIdStatus(5L); // Estado 5: Rechazado
             if (wo.getVehicleId() != null && wo.getVehicleId().getStudentId() != null) {
-                emailService.enviarNotificacion(wo.getVehicleId().getStudentId().getEmail(), "Work Order Rechazada", "El animador rechazó tu Work Order.");
+                emailService.enviarNotificacionConDetalles(wo.getVehicleId().getStudentId().getEmail(), "Work Order Rechazada", "El animador rechazó tu Work Order.", motivo);
             }
         }
         repo.save(wo);
@@ -155,17 +159,21 @@ public class WorkOrderService {
 
     // 3. Coordinadora revisa (Estado 2)
     public void revisionCoordinadora(Long woId, boolean aprobado) {
+        revisionCoordinadora(woId, aprobado, null);
+    }
+
+    public void revisionCoordinadora(Long woId, boolean aprobado, String motivo) {
         WorkOrderEntity wo = repo.findById(woId)
                 .orElseThrow(() -> new ExceptionWorkOrdernotfound("Work Order no encontrada"));
         if (aprobado) {
             wo.setIdStatus(3L); // Estado 3: Aprobado - En Progreso
             if (wo.getVehicleId() != null && wo.getVehicleId().getStudentId() != null) {
-                emailService.enviarNotificacion(wo.getVehicleId().getStudentId().getEmail(), "Work Order Aprobada Completamente", "Tu orden está lista.");
+                emailService.enviarNotificacionConDetalles(wo.getVehicleId().getStudentId().getEmail(), "Work Order Aprobada Completamente", "Tu orden está lista.", motivo);
             }
         } else {
             wo.setIdStatus(5L); // Estado 5: Rechazado
             if (wo.getVehicleId() != null && wo.getVehicleId().getStudentId() != null) {
-                emailService.enviarNotificacion(wo.getVehicleId().getStudentId().getEmail(), "Work Order Rechazada por Coordinación", "Revisa los comentarios de la Coordinadora.");
+                emailService.enviarNotificacionConDetalles(wo.getVehicleId().getStudentId().getEmail(), "Work Order Rechazada por Coordinación", "Revisa los comentarios de la Coordinadora.", motivo);
             }
         }
         repo.save(wo);
@@ -269,7 +277,11 @@ public class WorkOrderService {
     }
 
     public WorkOrderDTO updateWorkOrderStatus(Long workOrderId, Long newStatus) {
-        log.info("UpdateStatus - workOrderId={}, newStatus={}", workOrderId, newStatus);
+        return updateWorkOrderStatus(workOrderId, newStatus, null);
+    }
+
+    public WorkOrderDTO updateWorkOrderStatus(Long workOrderId, Long newStatus, String motivo) {
+        log.info("UpdateStatus - workOrderId={}, newStatus={}, motivo={}", workOrderId, newStatus, motivo);
         WorkOrderEntity workOrder = repo.findById(workOrderId)
                 .orElseThrow(() -> new ExceptionWorkOrdernotfound("Orden de trabajo no encontrada."));
 
@@ -295,37 +307,41 @@ public class WorkOrderService {
                 // Animador aprueba -> Correo a Coordinadora (Rol 3)
                 List<String> correosCoord = instructorRepository.findEmailByRolId(3L);
                 for (String correoCoord : correosCoord) {
-                    emailService.enviarNotificacion(
+                    emailService.enviarNotificacionConDetalles(
                         correoCoord,
                         "Work Order aprobada por Animador",
-                        "La Work Order del estudiante " + studentName + " ha sido aprobada por el Animador y requiere tu aprobación final."
+                        "La Work Order del estudiante " + studentName + " ha sido aprobada por el Animador y requiere tu aprobación final.",
+                        motivo
                     );
                 }
             } else if (newStatus == 3L) {
                 // Coordinadora aprueba / Aprobado - En Progreso -> Correo a Estudiante
                 if (studentEmail != null && !studentEmail.isEmpty()) {
-                    emailService.enviarNotificacion(
+                    emailService.enviarNotificacionConDetalles(
                         studentEmail,
                         "Work Order Aprobada - En Progreso",
-                        "Felicidades, tu orden de trabajo ha sido aprobada por la Coordinadora y se encuentra en progreso."
+                        "Felicidades, tu orden de trabajo ha sido aprobada por la Coordinadora y se encuentra en progreso.",
+                        motivo
                     );
                 }
             } else if (newStatus == 5L) {
                 // Rechazado -> Correo a Estudiante
                 if (studentEmail != null && !studentEmail.isEmpty()) {
-                    emailService.enviarNotificacion(
+                    emailService.enviarNotificacionConDetalles(
                         studentEmail,
                         "Work Order Rechazada",
-                        "Tu Work Order ha sido rechazada en el flujo de aprobación. Por favor revisa el sistema."
+                        "Tu Work Order ha sido rechazada en el flujo de aprobación. Por favor revisa el sistema.",
+                        motivo
                     );
                 }
             } else if (newStatus == 4L) {
                 // Completado -> Correo a Estudiante
                 if (studentEmail != null && !studentEmail.isEmpty()) {
-                    emailService.enviarNotificacion(
+                    emailService.enviarNotificacionConDetalles(
                         studentEmail,
                         "Work Order Completada",
-                        "Tu orden de trabajo ha sido completada con éxito."
+                        "Tu orden de trabajo ha sido completada con éxito.",
+                        motivo
                     );
                 }
             }

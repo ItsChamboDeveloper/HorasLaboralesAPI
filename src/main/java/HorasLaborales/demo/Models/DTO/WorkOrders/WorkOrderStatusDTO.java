@@ -17,4 +17,7 @@ public class WorkOrderStatusDTO {
     @Positive(message = "El idStatus debe ser un número positivo")
     private Long idStatus;
 
+    // Mensaje personalizado opcional para incluir en el correo de notificación
+    private String motivo;
+
 }

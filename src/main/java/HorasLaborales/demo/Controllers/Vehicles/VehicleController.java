@@ -116,9 +116,10 @@ public class VehicleController {
     @PutMapping("/updateStatusVehicle/{vehicleId}")
     public ResponseEntity<ApiResponse<VehicleDTO>> updateVehicleStatus(
             @PathVariable Long vehicleId,
-            @RequestParam Long newStatus
+            @RequestParam Long newStatus,
+            @RequestParam(required = false) String motivo
     ) {
-        VehicleDTO updated = vehicleService.updateVehicleStatus(vehicleId, newStatus);
+        VehicleDTO updated = vehicleService.updateVehicleStatus(vehicleId, newStatus, motivo);
         return ResponseEntity.ok(ApiResponse.success("Estado actualizado correctamente", updated));
     }
 

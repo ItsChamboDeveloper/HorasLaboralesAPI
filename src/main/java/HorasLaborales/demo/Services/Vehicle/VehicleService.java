@@ -131,8 +131,12 @@ public class VehicleService {
         return convertToDTO(saveVehicle);
     }
 
-    // 2. Animador revisa (Estado 1)
     public void revisionAnimador(Long vehiculoId, boolean aprobado) {
+        revisionAnimador(vehiculoId, aprobado, null);
+    }
+
+    // 2. Animador revisa (Estado 1) con motivo personalizado para correo
+    public void revisionAnimador(Long vehiculoId, boolean aprobado, String motivo) {
         VehicleEntity vehiculo = vehicleRepository.findById(vehiculoId)
                 .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
         
@@ -145,46 +149,54 @@ public class VehicleService {
                 studentName = vehiculo.getStudentId().getFirstName() + " " + vehiculo.getStudentId().getLastName();
             }
             for (String correoCoordinadora : correosCoordinadora) {
-                emailService.enviarNotificacion(
+                emailService.enviarNotificacionConDetalles(
                     correoCoordinadora,
                     "Vehículo aprobado por Animador - Requiere tu firma",
-                    "El vehículo de " + studentName + " fue aprobado por el Animador y espera tu aprobación final."
+                    "El vehículo de " + studentName + " fue aprobado por el Animador y espera tu aprobación final.",
+                    motivo
                 );
             }
         } else {
             vehiculo.setStatus(4L); // Id asignado a Rechazado en tu BD
             if (vehiculo.getStudentId() != null) {
-                emailService.enviarNotificacion(
+                emailService.enviarNotificacionConDetalles(
                     vehiculo.getStudentId().getEmail(),
                     "Vehículo Rechazado por el Animador",
-                    "Tu vehículo ha sido rechazado por el Animador. Por favor revisa el sistema."
+                    "Tu vehículo ha sido rechazado por el Animador. Por favor revisa el sistema.",
+                    motivo
                 );
             }
         }
         vehicleRepository.save(vehiculo);
     }
 
-    // 3. Coordinadora revisa (Estado 2)
     public void revisionCoordinadora(Long vehiculoId, boolean aprobado) {
+        revisionCoordinadora(vehiculoId, aprobado, null);
+    }
+
+    // 3. Coordinadora revisa (Estado 2) con motivo personalizado para correo
+    public void revisionCoordinadora(Long vehiculoId, boolean aprobado, String motivo) {
         VehicleEntity vehiculo = vehicleRepository.findById(vehiculoId)
                 .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
         
         if (aprobado) {
             vehiculo.setStatus(3L); // Id asignado a Aprobado Final en tu BD (3L = Aprobado)
             if (vehiculo.getStudentId() != null) {
-                emailService.enviarNotificacion(
+                emailService.enviarNotificacionConDetalles(
                     vehiculo.getStudentId().getEmail(),
                     "¡Vehículo Aprobado por Coordinación!",
-                    "Felicidades, tu vehículo ha completado el flujo de aprobación exitosamente."
+                    "Felicidades, tu vehículo ha completado el flujo de aprobación exitosamente.",
+                    motivo
                 );
             }
         } else {
             vehiculo.setStatus(4L); // Rechazado (4L = Rechazado)
             if (vehiculo.getStudentId() != null) {
-                emailService.enviarNotificacion(
+                emailService.enviarNotificacionConDetalles(
                     vehiculo.getStudentId().getEmail(),
                     "Vehículo Rechazado por Coordinación",
-                    "Tu vehículo ha sido rechazado en la fase final por la Coordinadora."
+                    "Tu vehículo ha sido rechazado en la fase final por la Coordinadora.",
+                    motivo
                 );
             }
         }
@@ -193,6 +205,10 @@ public class VehicleService {
 
     // Método para actualizar el estado de un vehículo
     public VehicleDTO updateVehicleStatus(Long vehicleId, Long newStatus) {
+        return updateVehicleStatus(vehicleId, newStatus, null);
+    }
+
+    public VehicleDTO updateVehicleStatus(Long vehicleId, Long newStatus, String motivo) {
         VehicleEntity vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
         
@@ -211,28 +227,31 @@ public class VehicleService {
                 // Animador aprueba -> Correo a Coordinadora (Rol 3)
                 List<String> correosCoordinadora = instructorRepository.findEmailByRolId(3L);
                 for (String correoCoordinadora : correosCoordinadora) {
-                    emailService.enviarNotificacion(
+                    emailService.enviarNotificacionConDetalles(
                         correoCoordinadora,
                         "Vehículo aprobado por Animador - Requiere tu firma",
-                        "El vehículo de " + studentName + " fue aprobado por el Animador y espera tu aprobación final."
+                        "El vehículo de " + studentName + " fue aprobado por el Animador y espera tu aprobación final.",
+                        motivo
                     );
                 }
             } else if (newStatus == 3L) {
                 // Coordinadora aprueba / Aprobado -> Correo a Estudiante
                 if (updated.getStudentId() != null) {
-                    emailService.enviarNotificacion(
+                    emailService.enviarNotificacionConDetalles(
                         updated.getStudentId().getEmail(),
                         "¡Vehículo Aprobado!",
-                        "Felicidades, tu vehículo ha completado el flujo de aprobación exitosamente."
+                        "Felicidades, tu vehículo ha completado el flujo de aprobación exitosamente.",
+                        motivo
                     );
                 }
             } else if (newStatus == 4L) {
                 // Rechazado (por Animador o Coordinadora) -> Correo a Estudiante
                 if (updated.getStudentId() != null) {
-                    emailService.enviarNotificacion(
+                    emailService.enviarNotificacionConDetalles(
                         updated.getStudentId().getEmail(),
                         "Vehículo Rechazado",
-                        "Tu vehículo ha sido rechazado en el flujo de aprobación. Por favor revisa el sistema."
+                        "Tu vehículo ha sido rechazado en el flujo de aprobación. Por favor revisa el sistema.",
+                        motivo
                     );
                 }
             }

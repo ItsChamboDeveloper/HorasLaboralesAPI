@@ -186,7 +186,7 @@ public class WorkOrderController {
             @Valid @RequestBody WorkOrderStatusDTO body
     ) {
         try {
-            WorkOrderDTO updated = workOrderService.updateWorkOrderStatus(workOrderId, body.getIdStatus());
+            WorkOrderDTO updated = workOrderService.updateWorkOrderStatus(workOrderId, body.getIdStatus(), body.getMotivo());
 
             Map<String, Object> workOrderMap = Map.of(
                     "workOrderId", updated.getWorkOrderId(),

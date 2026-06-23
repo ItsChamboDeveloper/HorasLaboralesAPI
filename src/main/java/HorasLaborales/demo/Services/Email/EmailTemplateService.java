@@ -34,28 +34,28 @@ public class EmailTemplateService {
 
         switch (tipo != null ? tipo.toLowerCase() : "info") {
             case "success":
-                colorPrimario = "#10B981";
-                colorFondo = "#ECFDF5";
-                icono = "✅";
-                colorTextoEstado = "#065F46";
+                colorPrimario = "#D9BF73";
+                colorFondo = "#F2E088";
+                icono = "";
+                colorTextoEstado = "#262624";
                 break;
             case "warning":
-                colorPrimario = "#F59E0B";
-                colorFondo = "#FFFBEB";
-                icono = "⚠️";
-                colorTextoEstado = "#92400E";
+                colorPrimario = "#F2B705";
+                colorFondo = "#F2E088";
+                icono = "";
+                colorTextoEstado = "#262624";
                 break;
             case "danger":
-                colorPrimario = "#EF4444";
+                colorPrimario = "#D9072D";
                 colorFondo = "#FEF2F2";
                 icono = "❌";
-                colorTextoEstado = "#991B1B";
+                colorTextoEstado = "#262624";
                 break;
             default: // info
-                colorPrimario = "#3B82F6";
-                colorFondo = "#EFF6FF";
-                icono = "📋";
-                colorTextoEstado = "#1E40AF";
+                colorPrimario = "#262624";
+                colorFondo = "#F2E088";
+                icono = "";
+                colorTextoEstado = "#262624";
                 break;
         }
 
@@ -81,7 +81,7 @@ public class EmailTemplateService {
 
         // ========== HEADER CON LOGO ==========
         html.append("<tr>");
-        html.append("<td style=\"background: linear-gradient(135deg, #1E3A5F 0%, #2C5282 50%, #1E3A5F 100%);padding:32px 40px;text-align:center;\">");
+        html.append("<td style=\"background: linear-gradient(135deg, #D9072D 0%, #262624 100%);padding:32px 40px;text-align:center;\">");
 
         // Logo del Instituto (imagen inline)
         html.append("<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">");
@@ -105,7 +105,9 @@ public class EmailTemplateService {
         html.append("<td style=\"background-color:").append(colorFondo).append(";padding:16px 40px;border-bottom:2px solid ").append(colorPrimario).append(";\">");
         html.append("<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">");
         html.append("<tr>");
-        html.append("<td style=\"font-size:28px;vertical-align:middle;padding-right:12px;width:40px;\">").append(icono).append("</td>");
+        if (icono != null && !icono.isEmpty()) {
+            html.append("<td style=\"font-size:28px;vertical-align:middle;padding-right:12px;width:40px;\">").append(icono).append("</td>");
+        }
         html.append("<td style=\"vertical-align:middle;\">");
         html.append("<h2 style=\"margin:0;color:").append(colorTextoEstado).append(";font-size:18px;font-weight:700;\">").append(escapeHtml(asunto)).append("</h2>");
         html.append("</td>");
@@ -143,7 +145,7 @@ public class EmailTemplateService {
         html.append("<tr><td style=\"background-color:#F9FAFB;padding:12px 16px;border-radius:8px;\">");
         html.append("<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">");
         html.append("<tr>");
-        html.append("<td style=\"color:#6B7280;font-size:13px;\">📅 Fecha de notificación</td>");
+        html.append("<td style=\"color:#6B7280;font-size:13px;\">Fecha de notificación</td>");
         html.append("<td align=\"right\" style=\"color:#1F2937;font-size:13px;font-weight:600;\">").append(fechaActual).append("</td>");
         html.append("</tr>");
         html.append("</table>");
@@ -164,12 +166,12 @@ public class EmailTemplateService {
 
         // ========== FOOTER ==========
         html.append("<tr>");
-        html.append("<td style=\"background-color:#1E3A5F;padding:24px 40px;text-align:center;\">");
+        html.append("<td style=\"background-color:#262624;padding:24px 40px;text-align:center;\">");
         html.append("<p style=\"margin:0 0 8px;color:rgba(255,255,255,0.9);font-size:13px;font-weight:600;\">Instituto Técnico Ricaldone</p>");
         html.append("<p style=\"margin:0 0 4px;color:rgba(255,255,255,0.6);font-size:12px;\">Calle y Colonia Don Bosco, San Salvador, El Salvador</p>");
-        html.append("<p style=\"margin:0;color:rgba(255,255,255,0.6);font-size:12px;\">📞 (503) 2251-4600 | 🌐 www.ricaldone.edu.sv</p>");
+        html.append("<p style=\"margin:0;color:rgba(255,255,255,0.6);font-size:12px;\">(503) 2251-4600 | www.ricaldone.edu.sv</p>");
         html.append("<hr style=\"border:none;border-top:1px solid rgba(255,255,255,0.15);margin:16px 0;\">");
-        html.append("<p style=\"margin:0;color:rgba(255,255,255,0.4);font-size:11px;\">© ").append(LocalDateTime.now().getYear()).append(" Horas Laborales Automotriz - Todos los derechos reservados</p>");
+        html.append("<p style=\"margin:0;color:rgba(255,255,255,0.4);font-size:11px;\">© ").append(LocalDateTime.now().getYear()).append(" Instituto Técnico Ricaldone</p>");
         html.append("</td>");
         html.append("</tr>");
 
