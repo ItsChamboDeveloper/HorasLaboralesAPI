@@ -247,4 +247,25 @@ public class StudentController {
         }
     }
 
+    @PutMapping("/changePassword/{id}")
+    public ResponseEntity<?> changeStudentPassword(@PathVariable Long id, @RequestBody Map<String, String> passwords) {
+        try {
+            String oldPassword = passwords.get("oldPassword");
+            String newPassword = passwords.get("newPassword");
+
+            if (oldPassword == null || newPassword == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Faltan datos de contraseña"));
+            }
+
+            boolean success = studentService.changeStudentPassword(id, oldPassword, newPassword);
+            if (success) {
+                return ResponseEntity.ok(Map.of("message", "Contraseña actualizada exitosamente"));
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Contraseña actual incorrecta"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Error al cambiar la contraseña"));
+        }
+    }
+
 }

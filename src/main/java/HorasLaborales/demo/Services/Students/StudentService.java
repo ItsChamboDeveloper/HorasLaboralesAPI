@@ -209,6 +209,19 @@ public class StudentService {
         return false;
     }
 
+    public boolean changeStudentPassword(Long id, String oldPassword, String newPassword) {
+        StudentEntity student = studentsRepository.findById(id).orElse(null);
+        if (student == null) return false;
+
+        if (!argon2.VerifyPassword(student.getPassword(), oldPassword)) {
+            return false;
+        }
+
+        student.setPassword(argon2.EncryptPassword(newPassword));
+        studentsRepository.save(student);
+        return true;
+    }
+
 //*** MÉTODOS COMPLEMENTARIOS***\\
 
 

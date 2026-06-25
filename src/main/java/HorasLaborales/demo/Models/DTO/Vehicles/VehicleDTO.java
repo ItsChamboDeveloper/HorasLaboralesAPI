@@ -16,10 +16,10 @@ public class VehicleDTO {
 
     @NotBlank(message = "El número de placa es obligatorio")
     // Validación para que el campo no esté vacío o solo contenga espacios en blanco
-    @Size(max = 10, message = "La placa no puede exceder 10 caracteres") // Validación para el tamaño máximo de la placa
+    @Size(max = 8, message = "La placa no puede exceder 8 caracteres") // Validación para el tamaño máximo de la placa
     @Pattern(
-            regexp = "^[A-Z]{1,3}[0-9]{3,6}$",
-            message = "Formato de placa inválido (ej: ABC1234)"
+            regexp = "^[A-Za-z]{1,2}[A-Za-z0-9]{3,6}$",
+            message = "La placa debe tener 1 o 2 letras seguidas de 3 a 6 números o letras (Ej: P123456, P452AAA)"
     ) // Validación para el formato de la placa
     private String plateNumber; // Número de placa del vehículo
 

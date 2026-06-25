@@ -30,7 +30,7 @@ public class VehicleEntity {
     private Long vehicleId;
 
     // Número de placa, único y obligatorio, máximo 10 caracteres
-    @Column(name = "PLATENUMBER", unique = true, length = 10, nullable = false)
+    @Column(name = "PLATENUMBER", unique = true, length = 8, nullable = false)
     @NotBlank(message= "El numero de palca debe ser obligatorio")
     private String plateNumber;
 
