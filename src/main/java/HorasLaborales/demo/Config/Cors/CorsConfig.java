@@ -18,12 +18,15 @@ public class CorsConfig {
 
         // ✅ ORÍGENES PERMITIDOS COMPLETOS
         configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000",  // React dev server
-                "http://localhost:4200",  // Angular dev server
-                "http://localhost:8080",  // Spring Boot
-                "http://localhost",       // XAMPP
-                "https://sistemaweb-sgma.vercel.app",  // Vercel production
-                "https://sgma-66ec41075156.herokuapp.com",  // Heroku production
+                "http://127.0.0.1:5500",
+                "http://127.0.0.1:5501",
+                "http://localhost:5500",
+                "http://localhost:3000",
+                "http://localhost:4200",
+                "http://localhost:8080",
+                "http://localhost",
+                "https://sistemaweb-sgma.vercel.app",
+                "https://sgma-66ec41075156.herokuapp.com",
                 "https://localhost/",
                 "https://localhost"
         ));
