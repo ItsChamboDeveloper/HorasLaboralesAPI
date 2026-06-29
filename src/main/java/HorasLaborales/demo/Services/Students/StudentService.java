@@ -190,38 +190,6 @@ public class StudentService {
         }
     }
 
-    //*** MÉTODO PARA RESETEAR LA CONTRASEÑA DE UN USUARIO ***\\
-
-    /**
-     *
-     * @param id ID del usuario cuya contraseña se va a resetear.
-     * @return true si la contraseña se reseteó exitosamente, false si el usuario no fue encontrado. False si el usuario no fue encontrado.
-     * @throws ExceptionStudentNotFound si el usuario no existe.
-     */
-    public boolean resetStudentPassword(@Valid Long id) {
-        StudentEntity existing = studentsRepository.findById(id).orElseThrow(() -> new ExceptionStudentNotFound("Estudiante no encontrado"));
-        if (existing != null) {
-            String newPassword = PasswordGenerator.generateSecurePassword(12);
-            existing.setPassword(argon2.EncryptPassword(newPassword));
-            StudentEntity studentUpdated = studentsRepository.save(existing);
-            return true;
-        }
-        return false;
-    }
-
-    public boolean changeStudentPassword(Long id, String oldPassword, String newPassword) {
-        StudentEntity student = studentsRepository.findById(id).orElse(null);
-        if (student == null) return false;
-
-        if (!argon2.VerifyPassword(student.getPassword(), oldPassword)) {
-            return false;
-        }
-
-        student.setPassword(argon2.EncryptPassword(newPassword));
-        studentsRepository.save(student);
-        return true;
-    }
-
 //*** MÉTODOS COMPLEMENTARIOS***\\
 
 

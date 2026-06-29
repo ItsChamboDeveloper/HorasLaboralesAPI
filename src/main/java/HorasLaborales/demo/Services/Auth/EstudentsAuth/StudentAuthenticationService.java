@@ -57,4 +57,20 @@ public class StudentAuthenticationService {
         return (studentOpt != null) ? studentOpt : null;
     }
 
+    /**
+     * Cambia la contraseña del estudiante.
+     */
+    public boolean changeStudentPassword(Long id, String oldPassword, String newPassword) {
+        Argon2Password objHash = new Argon2Password();
+        StudentEntity student = studentsRepository.findById(id).orElse(null);
+        if (student == null) return false;
+
+        if (!objHash.VerifyPassword(student.getPassword(), oldPassword)) {
+            return false;
+        }
+
+        student.setPassword(objHash.EncryptPassword(newPassword));
+        studentsRepository.save(student);
+        return true;
+    }
 }

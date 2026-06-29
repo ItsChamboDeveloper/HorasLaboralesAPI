@@ -59,4 +59,21 @@ public class InstructorAuthenticationService {
         return (instructoOpt != null) ? instructoOpt : null;
     }
 
+    /**
+     * Cambia la contraseña del instructor.
+     */
+    public boolean changeInstructorPassword(Long id, String oldPassword, String newPassword) {
+        Argon2Password objHash = new Argon2Password();
+        InstructorEntity instructor = instructorRepository.findById(id).orElse(null);
+        if (instructor == null) return false;
+
+        if (!objHash.VerifyPassword(instructor.getPassword(), oldPassword)) {
+            return false;
+        }
+
+        instructor.setPassword(objHash.EncryptPassword(newPassword));
+        instructorRepository.save(instructor);
+        return true;
+    }
+
 }

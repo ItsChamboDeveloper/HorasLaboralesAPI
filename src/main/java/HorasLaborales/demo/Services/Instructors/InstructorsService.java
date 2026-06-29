@@ -183,19 +183,6 @@ public class InstructorsService {
         return false;
     }
 
-    public boolean changeInstructorPassword(Long id, String oldPassword, String newPassword) {
-        InstructorEntity instructor = instructorRepository.findById(id).orElse(null);
-        if (instructor == null) return false;
-
-        if (!argon2.VerifyPassword(instructor.getPassword(), oldPassword)) {
-            return false;
-        }
-
-        instructor.setPassword(argon2.EncryptPassword(newPassword));
-        instructorRepository.save(instructor);
-        return true;
-    }
-
     //*** MÉTODOS COMPLEMENTARIOS***\\
 
     /**
