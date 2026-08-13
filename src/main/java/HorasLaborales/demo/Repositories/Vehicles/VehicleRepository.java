@@ -20,6 +20,9 @@ public interface VehicleRepository extends JpaRepository<VehicleEntity, Long> {
     Optional<VehicleEntity> findByOwnerPhone(String ownerPhone);
     List<VehicleEntity> findByStudentId_StudentId(Long studentId);
 
+    // *** NUEVO: para que el papá/mamá vea solo sus vehículos ***
+    List<VehicleEntity> findByParentId_ParentId(Long parentId);
+
     boolean existsByPlateNumber(String plateNumber);
 
 }

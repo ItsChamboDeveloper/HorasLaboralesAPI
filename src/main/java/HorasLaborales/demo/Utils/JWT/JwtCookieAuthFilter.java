@@ -92,6 +92,10 @@ public class JwtCookieAuthFilter extends OncePerRequestFilter {
                     authorities.add(new SimpleGrantedAuthority("ROLE_Coordinador"));
                     authorities.add(new SimpleGrantedAuthority("ROLE_Admin"));
                 }
+                // NOTA: el rol "Padre" (papás) no necesita mapeo especial aquí:
+                // como no coincide con ninguno de los casos de arriba, solo se
+                // le asigna su authority primaria "ROLE_Padre" (línea de arriba),
+                // que es justo lo que usan las rutas protegidas de papás.
             } else {
                 authorities.add(new SimpleGrantedAuthority("ROLE_Alumno"));
             }
@@ -113,7 +117,7 @@ public class JwtCookieAuthFilter extends OncePerRequestFilter {
             log.warn("Token expirado: {}", e.getMessage());
             sendError(response, "Token expirado", HttpServletResponse.SC_UNAUTHORIZED);
         } catch (MalformedJwtException e) {
-            log.warn("Token malformado: {}", e.getMessage());
+            log.warn("Token inválido: {}", e.getMessage());
             sendError(response, "Token inválido", HttpServletResponse.SC_FORBIDDEN);
         } catch (Exception e) {
             log.error("Error de autenticación", e);
@@ -149,7 +153,13 @@ public class JwtCookieAuthFilter extends OncePerRequestFilter {
         return
                 ("OPTIONS".equals(method)) ||
                 (path.equals("/api/studentsAuth/studentLogin") && "POST".equals(method)) ||
-                (path.equals("/api/instructorsAuth/instructorLogin") && "POST".equals(method));
+                (path.equals("/api/instructorsAuth/instructorLogin") && "POST".equals(method)) ||
+                // *** NUEVO: si no se agrega esta línea, el login de papás
+                // siempre responderá 401 "Token no encontrado" antes de
+                // siquiera intentar validar el correo/password, porque este
+                // filtro corre ANTES que las reglas de SecurityConfig. ***
+                (path.equals("/api/parentsAuth/parentLogin") && "POST".equals(method));
+
     }
 
 }

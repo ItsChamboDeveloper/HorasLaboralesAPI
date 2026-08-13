@@ -30,14 +30,14 @@ public class VehicleDTO {
     // Validación para el tamaño mínimo de la contraseña
     @Size(max = 50, message = "La marca no puede exceder 50 caracteres")
     // Validación para el tamaño máximo de la marca
-    private String brand; // Marca del vehículo
+    private String brand; // Marca del vehículo (texto libre, se mantiene por compatibilidad)
 
     @NotBlank(message = "El modelo es obligatorio")
     // Validación para que el campo no esté vacío o solo contenga espacios en blanco
     @Size(min = 3, message = "El modelo debe tener al menos 16 carácter")
     @Size(max = 50, message = "El modelo no puede exceder 50 caracteres")
     // Validación para el tamaño máximo del modelo
-    private String model; // Modelo del vehículo
+    private String model; // Modelo del vehículo (texto libre, se mantiene por compatibilidad)
 
     @NotNull(message = "El tipo de vehículo es obligatorio") // Validación para que el campo no sea nulo
     private Long typeId; // Tipo de vehículo (ej: automóvil, motocicleta, etc.)
@@ -90,10 +90,21 @@ public class VehicleDTO {
 
     private Long idStatus; // Estado del vehículo
 
+    // *** NUEVO: papá/mamá dueño de la cuenta que puede consultar este vehículo ***
+    @Positive(message = "El ID del papá/mamá debe ser positivo")
+    private Long parentId;
+
+    // *** NUEVO: modelo elegido en el combobox dependiente (marca -> modelo) ***
+    @Positive(message = "El ID del modelo debe ser positivo")
+    private Long vehicleModelId;
+
     //Campo adicional
     private String typeName;  // Campo adicional para mostrar el tipó de automóvil, campo como tal no existe en tbVehicles
     private String studentName;  // Campo adicional para mostrar el nombre del estudiante, campo como tal no existe en tbVehicles
     private String studentLastName; // Campo adicional para mostrar el apellido del estudiante, campo como tal no existe en tbVehicles
+    private String parentName; // Campo adicional para mostrar el nombre del papá/mamá, campo como tal no existe en tbVehicles
+    private String vehicleModelName; // Campo adicional para mostrar el nombre del modelo elegido, campo como tal no existe en tbVehicles
+    private String vehicleBrandName; // Campo adicional para mostrar la marca del modelo elegido, campo como tal no existe en tbVehicles
 
 
 }

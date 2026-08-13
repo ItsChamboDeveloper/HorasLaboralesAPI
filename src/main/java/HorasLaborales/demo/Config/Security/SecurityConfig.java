@@ -35,6 +35,12 @@ public class SecurityConfig {
     private static final String workOrdersBase = "/work-orders";
     private static final String workOrdersApi  = "/api/work-orders";
 
+    // *** NUEVO: rutas para papás, marcas y modelos ***
+    private static final String parentAuth     = "/api/parentsAuth";
+    private static final String parents        = "/api/parents";
+    private static final String brands         = "/api/brands";
+    private static final String vehicleModels  = "/api/vehicleModels";
+
     private final JwtCookieAuthFilter jwtCookieAuthFilter;
     private final CorsConfigurationSource corsConfigurationSource;
 
@@ -72,6 +78,20 @@ public class SecurityConfig {
                         .requestMatchers(instructorAuth + "/meInstructor").authenticated()
                         .requestMatchers(HttpMethod.POST, instructorAuth + "/logoutInstructor").authenticated()
 
+                        // ── PARENT AUTH (NUEVO) ───────────────────────────────────
+                        .requestMatchers(HttpMethod.POST, parentAuth + "/parentLogin").permitAll()
+                        .requestMatchers(parentAuth + "/meParent").authenticated()
+                        .requestMatchers(HttpMethod.POST, parentAuth + "/logoutParent").authenticated()
+
+                        // ── PARENTS (NUEVO) ────────────────────────────────────────
+                        .requestMatchers(HttpMethod.POST, parents + "/newParent").authenticated()
+                        .requestMatchers(HttpMethod.GET,  parents + "/getAllParents").authenticated()
+
+                        // ── BRANDS / VEHICLE MODELS (NUEVO, combobox dependiente) ──
+                        .requestMatchers(HttpMethod.GET, brands + "/getAllBrands").authenticated()
+                        .requestMatchers(HttpMethod.GET, vehicleModels + "/getAllModels").authenticated()
+                        .requestMatchers(HttpMethod.GET, vehicleModels + "/getModelsByBrand/*").authenticated()
+
                         // ── ENTRIES ───────────────────────────────────────────────
                         .requestMatchers(HttpMethod.POST, entries + "/newEntry").authenticated()
                         .requestMatchers(HttpMethod.GET,  entries + "/getAllEntries").authenticated()
@@ -79,6 +99,7 @@ public class SecurityConfig {
                         // ── VEHICLES ──────────────────────────────────────────────
                         .requestMatchers(HttpMethod.POST, vehicles + "/newVehicle").authenticated()
                         .requestMatchers(HttpMethod.GET,  vehicles + "/getVehiclesByStudent/*").authenticated()
+                        .requestMatchers(HttpMethod.GET,  vehicles + "/getVehiclesByParentId/*").authenticated()
 
                         // ── MODULES ───────────────────────────────────────────────
                         .requestMatchers(HttpMethod.GET, modules + "/getAllModules").authenticated()

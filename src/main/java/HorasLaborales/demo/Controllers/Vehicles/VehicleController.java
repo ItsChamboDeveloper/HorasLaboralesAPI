@@ -92,6 +92,13 @@ public class VehicleController {
         return ResponseEntity.ok(ApiResponse.success("Vehículos consultados correctamente", result));
     }
 
+    // *** NUEVO: para que el papá/mamá vea SOLO los vehículos de su cuenta ***
+    @GetMapping("/getVehiclesByParentId/{parentId}")
+    public ResponseEntity<?> getVehiclesByParentId(@PathVariable Long parentId) {
+        Map<String, Object> result = vehicleService.getVehiclesByParentId(parentId);
+        return ResponseEntity.ok(ApiResponse.success("Vehículos consultados correctamente", result));
+    }
+
 
     @PostMapping("/newVehicle")
     public ResponseEntity<ApiResponse<VehicleDTO>> createVehicle(@Valid @RequestBody VehicleDTO json

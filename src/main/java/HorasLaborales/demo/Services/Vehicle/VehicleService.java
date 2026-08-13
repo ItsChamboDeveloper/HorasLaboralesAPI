@@ -1,13 +1,19 @@
 package HorasLaborales.demo.Services.Vehicle;
 
+import HorasLaborales.demo.Entities.Parents.ParentEntity;
 import HorasLaborales.demo.Entities.Students.StudentEntity;
+import HorasLaborales.demo.Entities.VehicleModels.VehicleModelEntity;
 import HorasLaborales.demo.Entities.Vehicles.VehicleEntity;
 import HorasLaborales.demo.Entities.VehiclesTypes.VehicleTypeEntity;
+import HorasLaborales.demo.Exceptions.Parents.ExceptionParentNotFound;
 import HorasLaborales.demo.Exceptions.Students.ExceptionStudentNotFound;
 import HorasLaborales.demo.Exceptions.Vehicles.ExceptionPlateNumberDuplicated;
+import HorasLaborales.demo.Exceptions.VehicleModels.ExceptionVehicleModelNotFound;
 import HorasLaborales.demo.Exceptions.VehiclesType.ExceptionVehicleTypeIdNotFound;
 import HorasLaborales.demo.Models.DTO.Vehicles.VehicleDTO;
+import HorasLaborales.demo.Repositories.Parents.ParentRepository;
 import HorasLaborales.demo.Repositories.Students.StudentsRepository;
+import HorasLaborales.demo.Repositories.VehicleModels.VehicleModelRepository;
 import HorasLaborales.demo.Repositories.VehicleType.VehicleTypeRepository;
 import HorasLaborales.demo.Repositories.Vehicles.VehicleRepository;
 import HorasLaborales.demo.Repositories.Instructors.InstructorRepository;
@@ -42,6 +48,14 @@ public class VehicleService {
 
     @Autowired
     private InstructorRepository instructorRepository;
+
+    // *** NUEVO ***
+    @Autowired
+    private ParentRepository parentRepository;
+
+    // *** NUEVO ***
+    @Autowired
+    private VehicleModelRepository vehicleModelRepository;
 
     //*** MÉTODOS PRINCIPALES ***\\
 
@@ -139,11 +153,11 @@ public class VehicleService {
     public void revisionAnimador(Long vehiculoId, boolean aprobado, String motivo) {
         VehicleEntity vehiculo = vehicleRepository.findById(vehiculoId)
                 .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
-        
+
         if (aprobado) {
             vehiculo.setStatus(2L); // Pasa a Estado 2: Aprobación de Coordinadora
             List<String> correosCoordinadora = instructorRepository.findEmailByRolId(3L); // Rol 3: Admin (Coordinadora)
-            
+
             String studentName = "";
             if (vehiculo.getStudentId() != null) {
                 studentName = vehiculo.getStudentId().getFirstName() + " " + vehiculo.getStudentId().getLastName();
@@ -178,7 +192,7 @@ public class VehicleService {
     public void revisionCoordinadora(Long vehiculoId, boolean aprobado, String motivo) {
         VehicleEntity vehiculo = vehicleRepository.findById(vehiculoId)
                 .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
-        
+
         if (aprobado) {
             vehiculo.setStatus(3L); // Id asignado a Aprobado Final en tu BD (3L = Aprobado)
             if (vehiculo.getStudentId() != null) {
@@ -211,7 +225,7 @@ public class VehicleService {
     public VehicleDTO updateVehicleStatus(Long vehicleId, Long newStatus, String motivo) {
         VehicleEntity vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
-        
+
         Long previousStatus = vehicle.getStatus();
         vehicle.setStatus(newStatus);
         VehicleEntity updated = vehicleRepository.save(vehicle);
@@ -299,6 +313,22 @@ public class VehicleService {
 
         dto.setMaintenanceEXPO(entity.getMaintenanceExpo());
         dto.setIdStatus(entity.getStatus());
+
+        // *** NUEVO: papá/mamá dueño de la cuenta ***
+        if (entity.getParentId() != null) {
+            dto.setParentId(entity.getParentId().getParentId());
+            dto.setParentName(entity.getParentId().getFirstName() + " " + entity.getParentId().getLastName());
+        }
+
+        // *** NUEVO: modelo elegido por combobox (marca -> modelo) ***
+        if (entity.getVehicleModelId() != null) {
+            dto.setVehicleModelId(entity.getVehicleModelId().getModelId());
+            dto.setVehicleModelName(entity.getVehicleModelId().getModelName());
+            if (entity.getVehicleModelId().getBrandId() != null) {
+                dto.setVehicleBrandName(entity.getVehicleModelId().getBrandId().getBrandName());
+            }
+        }
+
         return dto;
     }
 
@@ -332,12 +362,38 @@ public class VehicleService {
         entity.setMaintenanceExpo(json.getMaintenanceEXPO());
         entity.setStatus(json.getIdStatus());
 
+        // *** NUEVO: papá/mamá dueño de la cuenta ***
+        if (json.getParentId() != null) {
+            ParentEntity parentEntity = parentRepository.findById(json.getParentId())
+                    .orElseThrow(() -> new ExceptionParentNotFound("ID del papá/mamá no encontrado"));
+            entity.setParentId(parentEntity);
+        }
+
+        // *** NUEVO: modelo elegido por combobox (marca -> modelo) ***
+        if (json.getVehicleModelId() != null) {
+            VehicleModelEntity modelEntity = vehicleModelRepository.findById(json.getVehicleModelId())
+                    .orElseThrow(() -> new ExceptionVehicleModelNotFound("ID del modelo de vehículo no encontrado"));
+            entity.setVehicleModelId(modelEntity);
+        }
+
         return entity;
     }
 
     // Método para obtener vehículos por el ID del estudiante
     public Map<String, Object> getVehiclesByStudentId(Long studentId) {
         List<VehicleEntity> vehicles = vehicleRepository.findByStudentId_StudentId(studentId);
+        List<VehicleDTO> vehicleDTOs = vehicles.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return Map.of(
+                "vehiculos", vehicleDTOs,
+                "cantidad", vehicleDTOs.size()
+        );
+    }
+
+    // *** NUEVO: método para que el papá/mamá vea solo SUS vehículos ***
+    public Map<String, Object> getVehiclesByParentId(Long parentId) {
+        List<VehicleEntity> vehicles = vehicleRepository.findByParentId_ParentId(parentId);
         List<VehicleDTO> vehicleDTOs = vehicles.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());

@@ -1,6 +1,8 @@
 package HorasLaborales.demo.Entities.Vehicles;
 
+import HorasLaborales.demo.Entities.Parents.ParentEntity;
 import HorasLaborales.demo.Entities.Students.StudentEntity;
+import HorasLaborales.demo.Entities.VehicleModels.VehicleModelEntity;
 import HorasLaborales.demo.Entities.VehiclesTypes.VehicleTypeEntity;
 import HorasLaborales.demo.Entities.WorkOrders.WorkOrderEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -34,11 +36,13 @@ public class VehicleEntity {
     @NotBlank(message= "El numero de palca debe ser obligatorio")
     private String plateNumber;
 
-    // Marca del vehículo, obligatorio, máximo 50 caracteres
+    // Marca del vehículo en texto libre (se conserva por compatibilidad;
+    // el combobox nuevo usa vehicleModelId de abajo)
     @Column(name = "BRAND", length = 50, nullable = false)
     private String brand;
 
-    // Modelo del vehículo, obligatorio, máximo 50 caracteres
+    // Modelo del vehículo en texto libre (se conserva por compatibilidad;
+    // el combobox nuevo usa vehicleModelId de abajo)
     @Column(name = "MODEL", length = 50 , nullable = false)
     private String model;
 
@@ -81,6 +85,16 @@ public class VehicleEntity {
     @Column(name = "IDSTATUS", nullable = false)
     private Long status; // Estado del vehículo (activo/inactivo)
 
+    // *** NUEVO: papá/mamá dueño de la cuenta que puede consultar este vehículo ***
+    @ManyToOne(fetch = FetchType.LAZY) // Muchos vehículos pueden pertenecer al mismo papá/mamá
+    @JoinColumn(name = "PARENTID", referencedColumnName = "PARENTID") // Columna que conecta con la tabla de papás
+    private ParentEntity parentId;
+
+    // *** NUEVO: modelo del vehículo vía combobox dependiente (marca -> modelo) ***
+    @ManyToOne(fetch = FetchType.LAZY) // Muchos vehículos pueden compartir el mismo modelo
+    @JoinColumn(name = "MODELID", referencedColumnName = "MODELID") // Columna que conecta con la tabla de modelos
+    private VehicleModelEntity vehicleModelId;
+
     //*** ONETOMANYS ***\\
 
     @OneToMany(mappedBy = "vehicleId", cascade = CascadeType.ALL, fetch = FetchType.LAZY) // Relación OneToMany con tbWorkOrders
@@ -104,6 +118,8 @@ public class VehicleEntity {
                 ", studentId=" + studentId +
                 ", maintenanceExpo=" + maintenanceExpo +
                 ", status=" + status +
+                ", parentId=" + parentId +
+                ", vehicleModelId=" + vehicleModelId +
                 ", workOrder=" + workOrder +
                 '}';
     }
