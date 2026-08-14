@@ -3,9 +3,11 @@ package HorasLaborales.demo.Controllers.Auth;
 import HorasLaborales.demo.Entities.Parents.ParentEntity;
 import HorasLaborales.demo.Models.DTO.Parents.ParentDTO;
 import HorasLaborales.demo.Services.Auth.ParentsAuth.ParentAuthenticationService;
+import HorasLaborales.demo.Services.Parents.ParentService;
 import HorasLaborales.demo.Utils.JWT.JWTUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,10 +32,39 @@ public class ParentAuthenticationController {
     private ParentAuthenticationService parentAuthenticationService;
 
     /**
+     * Servicio para crear la cuenta de papá/mamá durante el autoregistro.
+     */
+    @Autowired
+    private ParentService parentService;
+
+    /**
      * Utilidad para la generación y validación de tokens JWT.
      */
     @Autowired
     private JWTUtils jwtUtils;
+
+    /**
+     * Endpoint público de autoregistro para papás/mamás. A diferencia de
+     * POST /api/parents/newParent (que requiere sesión de instructor), este
+     * permite que el propio dueño del vehículo cree su cuenta sin depender
+     * de que alguien más la haya dado de alta antes. Al terminar, deja al
+     * papá/mamá con sesión iniciada (misma cookie que usa el login).
+     */
+    @PostMapping("/registerParent")
+    public ResponseEntity<String> registerParent(@Valid @RequestBody ParentDTO data, HttpServletResponse response) {
+        if (data.getEmail() == null || data.getEmail().isBlank() ||
+                data.getPassword() == null || data.getPassword().isBlank() ||
+                data.getFirstName() == null || data.getFirstName().isBlank() ||
+                data.getLastName() == null || data.getLastName().isBlank() ||
+                data.getDui() == null || data.getDui().isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: Datos incompletos para el registro");
+        }
+
+        parentService.createParent(data);
+        addTokenCookie(response, data.getEmail());
+
+        return ResponseEntity.ok("Registro exitoso");
+    }
 
     /**
      * Endpoint para el inicio de sesión de papás/mamás.

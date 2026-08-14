@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -96,6 +97,20 @@ public class VehicleController {
     @GetMapping("/getVehiclesByParentId/{parentId}")
     public ResponseEntity<?> getVehiclesByParentId(@PathVariable Long parentId) {
         Map<String, Object> result = vehicleService.getVehiclesByParentId(parentId);
+        return ResponseEntity.ok(ApiResponse.success("Vehículos consultados correctamente", result));
+    }
+
+    // *** NUEVO: vehículos del papá/mamá autenticado, buscados por su propio correo
+    // (tomado del token, nunca de un parámetro) para que no pueda consultar el
+    // correo de otra persona ***
+    @GetMapping("/myVehicles")
+    public ResponseEntity<?> getMyVehicles(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "No autenticado"));
+        }
+        String ownerEmail = authentication.getName();
+        Map<String, Object> result = vehicleService.getVehiclesByOwnerEmail(ownerEmail);
         return ResponseEntity.ok(ApiResponse.success("Vehículos consultados correctamente", result));
     }
 

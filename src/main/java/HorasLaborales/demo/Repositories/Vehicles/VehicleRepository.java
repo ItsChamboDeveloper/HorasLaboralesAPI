@@ -23,6 +23,9 @@ public interface VehicleRepository extends JpaRepository<VehicleEntity, Long> {
     // *** NUEVO: para que el papá/mamá vea solo sus vehículos ***
     List<VehicleEntity> findByParentId_ParentId(Long parentId);
 
+    // *** NUEVO: para que el papá/mamá vea sus vehículos por correo (texto libre) ***
+    List<VehicleEntity> findByOwnerEmailIgnoreCase(String ownerEmail);
+
     boolean existsByPlateNumber(String plateNumber);
 
 }

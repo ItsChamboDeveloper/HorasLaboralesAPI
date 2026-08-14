@@ -302,7 +302,11 @@ public class VehicleService {
         dto.setOwnerName(entity.getOwnerName());
         dto.setOwnerDui(entity.getOwnerDui());
         dto.setOwnerPhone(entity.getOwnerPhone());
+        dto.setOwnerEmail(entity.getOwnerEmail());
         dto.setVehicleImage(entity.getVehicleImage());
+        dto.setVehicleImageLeft(entity.getVehicleImageLeft());
+        dto.setVehicleImageRight(entity.getVehicleImageRight());
+        dto.setVehicleImageBack(entity.getVehicleImageBack());
 
         // Asigna el nombre y ID del estudiante si el vehículo está asociado a un estudiante
         if (entity.getStudentId() != null) {
@@ -351,7 +355,11 @@ public class VehicleService {
         entity.setOwnerName(json.getOwnerName());
         entity.setOwnerDui(json.getOwnerDui());
         entity.setOwnerPhone(json.getOwnerPhone());
+        entity.setOwnerEmail(json.getOwnerEmail());
         entity.setVehicleImage(json.getVehicleImage());
+        entity.setVehicleImageLeft(json.getVehicleImageLeft());
+        entity.setVehicleImageRight(json.getVehicleImageRight());
+        entity.setVehicleImageBack(json.getVehicleImageBack());
 
         if (json.getStudentId() != null) {
             StudentEntity studentEntity = studentsRepository.findById(json.getStudentId())
@@ -394,6 +402,20 @@ public class VehicleService {
     // *** NUEVO: método para que el papá/mamá vea solo SUS vehículos ***
     public Map<String, Object> getVehiclesByParentId(Long parentId) {
         List<VehicleEntity> vehicles = vehicleRepository.findByParentId_ParentId(parentId);
+        List<VehicleDTO> vehicleDTOs = vehicles.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return Map.of(
+                "vehiculos", vehicleDTOs,
+                "cantidad", vehicleDTOs.size()
+        );
+    }
+
+    // *** NUEVO: vehículos cuyo correo de propietario (texto libre) coincide con
+    // el correo de la cuenta de papá/mamá autenticada. Así el padre ve sus
+    // vehículos sin que hiciera falta un combobox de cuentas antes de crear el vehículo ***
+    public Map<String, Object> getVehiclesByOwnerEmail(String ownerEmail) {
+        List<VehicleEntity> vehicles = vehicleRepository.findByOwnerEmailIgnoreCase(ownerEmail);
         List<VehicleDTO> vehicleDTOs = vehicles.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());

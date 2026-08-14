@@ -370,6 +370,7 @@ public class WorkOrderService {
             dto.setVehicleModel(v.getModel());
             dto.setVehicleYear(null); // no existe en entidad
             dto.setOwnerName(v.getOwnerName());
+            dto.setOwnerEmail(v.getOwnerEmail());
 
             if (v.getStudentId() != null) {
                 dto.setStudentName(v.getStudentId().getFirstName());
@@ -381,27 +382,39 @@ public class WorkOrderService {
             dto.setModuleName(workOrderEntity.getModuleId().getModuleName());
             dto.setModuleId(workOrderEntity.getModuleId().getModuleId());
             dto.setModuleCode(workOrderEntity.getModuleId().getModuleCode());
+
+            if (workOrderEntity.getModuleId().getInstructor() != null) {
+                dto.setInstructorName(
+                        workOrderEntity.getModuleId().getInstructor().getFirstName() + " " +
+                                workOrderEntity.getModuleId().getInstructor().getLastName()
+                );
+            }
         }
 
         dto.setWorkOrderImage(workOrderEntity.getWorkOrdersImage());
+        dto.setWorkOrderImageLeft(workOrderEntity.getWorkOrderImageLeft());
+        dto.setWorkOrderImageRight(workOrderEntity.getWorkOrderImageRight());
+        dto.setWorkOrderImageBack(workOrderEntity.getWorkOrderImageBack());
         dto.setIdStatus(workOrderEntity.getIdStatus());
         dto.setDescription(workOrderEntity.getDescription());
         dto.setEstimatedTime(workOrderEntity.getEstimatedTime());
 
         Long status = workOrderEntity.getIdStatus();
         String statusName = "";
+        int progressPercent = 0;
         if (status != null) {
             switch (status.intValue()) {
-                case 1 -> statusName = "Pendiente";
-                case 2 -> statusName = "Aprobado";
-                case 3 -> statusName = "Aprobado - En Progreso";
-                case 4 -> statusName = "Completado";
-                case 5 -> statusName = "Rechazado";
-                case 6 -> statusName = "Atrasado";
-                default -> statusName = "Desconocido";
+                case 1 -> { statusName = "Pendiente"; progressPercent = 25; }
+                case 2 -> { statusName = "Aprobado"; progressPercent = 50; }
+                case 3 -> { statusName = "Aprobado - En Progreso"; progressPercent = 75; }
+                case 4 -> { statusName = "Completado"; progressPercent = 100; }
+                case 5 -> { statusName = "Rechazado"; progressPercent = 0; }
+                case 6 -> { statusName = "Atrasado"; progressPercent = 50; }
+                default -> { statusName = "Desconocido"; progressPercent = 0; }
             }
         }
         dto.setStatusName(statusName);
+        dto.setProgressPercent(progressPercent);
 
         return dto;
     }
@@ -423,6 +436,9 @@ public class WorkOrderService {
         }
 
         entity.setWorkOrdersImage(json.getWorkOrderImage());
+        entity.setWorkOrderImageLeft(json.getWorkOrderImageLeft());
+        entity.setWorkOrderImageRight(json.getWorkOrderImageRight());
+        entity.setWorkOrderImageBack(json.getWorkOrderImageBack());
         entity.setIdStatus(json.getIdStatus());
         entity.setDescription(json.getDescription());
         entity.setEstimatedTime(json.getEstimatedTime());

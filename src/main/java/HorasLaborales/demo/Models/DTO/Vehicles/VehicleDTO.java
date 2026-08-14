@@ -78,8 +78,24 @@ public class VehicleDTO {
     // Validación para que el teléfono tenga entre 8 y 10 caracteres
     private String ownerPhone; // Teléfono del propietario del vehículo
 
-    @NotBlank(message = "La imagen del vehículo es obligatoria")
-    private String vehicleImage; // Campo para almacenar la imagen del vehículo (URL)
+    @NotBlank(message = "El correo del propietario es obligatorio")
+    @Email(message = "El correo del propietario no tiene un formato válido")
+    @Size(max = 150, message = "El correo del propietario no puede exceder 150 caracteres")
+    // Correo en texto libre; si el dueño crea una cuenta de papá/mamá con este
+    // mismo correo, sus vehículos aparecen automáticamente en su seguimiento
+    private String ownerEmail;
+
+    @NotBlank(message = "La imagen frontal del vehículo es obligatoria")
+    private String vehicleImage; // Campo para almacenar la imagen frontal del vehículo (URL)
+
+    @NotBlank(message = "La imagen lateral izquierda del vehículo es obligatoria")
+    private String vehicleImageLeft;
+
+    @NotBlank(message = "La imagen lateral derecha del vehículo es obligatoria")
+    private String vehicleImageRight;
+
+    @NotBlank(message = "La imagen trasera del vehículo es obligatoria")
+    private String vehicleImageBack;
 
     @Positive(message = "El ID del estudiante debe ser positivo")
     // Validación para que el ID del estudiante sea positivo
