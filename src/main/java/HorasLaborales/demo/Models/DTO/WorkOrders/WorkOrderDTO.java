@@ -24,8 +24,17 @@ public class WorkOrderDTO {
     @NotBlank(message = "El tiempo estimado es obligatorio")
     private String estimatedTime;
 
-    @NotNull(message = "La imagen de la orden de trabajo es obligatoria")
+    @NotNull(message = "La imagen frontal de la orden de trabajo es obligatoria")
     private String workOrderImage;
+
+    @NotNull(message = "La imagen lateral izquierda de la orden de trabajo es obligatoria")
+    private String workOrderImageLeft;
+
+    @NotNull(message = "La imagen lateral derecha de la orden de trabajo es obligatoria")
+    private String workOrderImageRight;
+
+    @NotNull(message = "La imagen trasera de la orden de trabajo es obligatoria")
+    private String workOrderImageBack;
 
     @NotNull(message = "El estado es obligatorio")
     private Long idStatus;
@@ -43,6 +52,9 @@ public class WorkOrderDTO {
     private String studentName;
     private String studentLastName;
     private String ownerName;
+    private String ownerEmail;
+    private String instructorName; // Profesor asignado al módulo de esta orden
+    private Integer progressPercent; // Progreso derivado de idStatus, para la barra de seguimiento
 
     @JsonSetter("estimatedTime")
     public void setEstimatedTimeFromJson(Object value) {

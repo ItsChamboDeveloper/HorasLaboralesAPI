@@ -158,7 +158,9 @@ public class JwtCookieAuthFilter extends OncePerRequestFilter {
                 // siempre responderá 401 "Token no encontrado" antes de
                 // siquiera intentar validar el correo/password, porque este
                 // filtro corre ANTES que las reglas de SecurityConfig. ***
-                (path.equals("/api/parentsAuth/parentLogin") && "POST".equals(method));
+                (path.equals("/api/parentsAuth/parentLogin") && "POST".equals(method)) ||
+                // *** NUEVO: mismo caso para el autoregistro de papás/mamás ***
+                (path.equals("/api/parentsAuth/registerParent") && "POST".equals(method));
 
     }
 

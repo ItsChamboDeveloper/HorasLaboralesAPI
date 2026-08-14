@@ -40,9 +40,21 @@ public class WorkOrderEntity {
     @Column(name = "ESTIMATEDTIME", length = 5)
     private String estimatedTime;
 
-    // Imagen asociada a la orden de trabajo (puede ser URL o base64)
+    // Imagen asociada a la orden de trabajo (frontal, puede ser URL o base64)
     @Column(name = "WORKORDERIMAGE")
     private String workOrdersImage;
+
+    // Imagen lateral izquierda de la orden de trabajo
+    @Column(name = "WORKORDERIMAGELEFT", length = 500)
+    private String workOrderImageLeft;
+
+    // Imagen lateral derecha de la orden de trabajo
+    @Column(name = "WORKORDERIMAGERIGHT", length = 500)
+    private String workOrderImageRight;
+
+    // Imagen trasera de la orden de trabajo
+    @Column(name = "WORKORDERIMAGEBACK", length = 500)
+    private String workOrderImageBack;
 
     // Estado de la orden de trabajo (por ejemplo: pendiente, en proceso, finalizada)
     // Cambiado a idStatus y mapeado a la columna IDSTATUS en BD para evitar ORA-00904 si la columna real es IDSTATUS
@@ -67,6 +79,9 @@ public class WorkOrderEntity {
                 ", moduleId=" + moduleId +
                 ", estimatedTime='" + estimatedTime + '\'' +
                 ", workOrdersImage='" + workOrdersImage + '\'' +
+                ", workOrderImageLeft='" + workOrderImageLeft + '\'' +
+                ", workOrderImageRight='" + workOrderImageRight + '\'' +
+                ", workOrderImageBack='" + workOrderImageBack + '\'' +
                 ", idStatus=" + idStatus +
                 ", description='" + description + '\'' +
                 ", entry=" + entry +

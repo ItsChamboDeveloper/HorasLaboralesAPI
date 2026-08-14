@@ -70,9 +70,27 @@ public class VehicleEntity {
     @Column(name = "OWNERPHONE", length = 10)
     private String ownerPhone;
 
-    // Imagen del vehículo, obligatorio (puede ser URL o base64)
+    // Imagen del vehículo (frontal), obligatorio (puede ser URL o base64)
     @Column(name = "VEHICLEIMAGE", nullable = false)
     private String vehicleImage;
+
+    // Imagen lateral izquierda del vehículo
+    @Column(name = "VEHICLEIMAGELEFT", length = 500)
+    private String vehicleImageLeft;
+
+    // Imagen lateral derecha del vehículo
+    @Column(name = "VEHICLEIMAGERIGHT", length = 500)
+    private String vehicleImageRight;
+
+    // Imagen trasera del vehículo
+    @Column(name = "VEHICLEIMAGEBACK", length = 500)
+    private String vehicleImageBack;
+
+    // Correo del propietario en texto libre (para que, si crea una cuenta de
+    // papá/mamá con este mismo correo, vea automáticamente sus vehículos sin
+    // necesidad de un combobox de cuentas ya existentes)
+    @Column(name = "OWNEREMAIL", length = 150)
+    private String ownerEmail;
 
     @ManyToOne // Muchos vehículos pueden estar asociados a un mismo estudiante
     @JoinColumn(name = "STUDENTID", referencedColumnName = "STUDENTID") // Columna que conecta con la tabla de estudiantes
@@ -114,7 +132,11 @@ public class VehicleEntity {
                 ", ownerName='" + ownerName + '\'' +
                 ", ownerDui='" + ownerDui + '\'' +
                 ", ownerPhone='" + ownerPhone + '\'' +
+                ", ownerEmail='" + ownerEmail + '\'' +
                 ", vehicleImage='" + vehicleImage + '\'' +
+                ", vehicleImageLeft='" + vehicleImageLeft + '\'' +
+                ", vehicleImageRight='" + vehicleImageRight + '\'' +
+                ", vehicleImageBack='" + vehicleImageBack + '\'' +
                 ", studentId=" + studentId +
                 ", maintenanceExpo=" + maintenanceExpo +
                 ", status=" + status +

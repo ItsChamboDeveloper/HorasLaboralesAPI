@@ -80,6 +80,7 @@ public class SecurityConfig {
 
                         // ── PARENT AUTH (NUEVO) ───────────────────────────────────
                         .requestMatchers(HttpMethod.POST, parentAuth + "/parentLogin").permitAll()
+                        .requestMatchers(HttpMethod.POST, parentAuth + "/registerParent").permitAll()
                         .requestMatchers(parentAuth + "/meParent").authenticated()
                         .requestMatchers(HttpMethod.POST, parentAuth + "/logoutParent").authenticated()
 
@@ -100,6 +101,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, vehicles + "/newVehicle").authenticated()
                         .requestMatchers(HttpMethod.GET,  vehicles + "/getVehiclesByStudent/*").authenticated()
                         .requestMatchers(HttpMethod.GET,  vehicles + "/getVehiclesByParentId/*").authenticated()
+                        .requestMatchers(HttpMethod.GET,  vehicles + "/myVehicles").hasAuthority("ROLE_Padre")
 
                         // ── MODULES ───────────────────────────────────────────────
                         .requestMatchers(HttpMethod.GET, modules + "/getAllModules").authenticated()
