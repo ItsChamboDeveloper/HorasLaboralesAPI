@@ -70,17 +70,26 @@ public class SecurityConfig {
 
                         // ── STUDENT AUTH ──────────────────────────────────────────
                         .requestMatchers(HttpMethod.POST, studentAuth + "/studentLogin").permitAll()
+                        .requestMatchers(HttpMethod.POST, studentAuth + "/recoverPassword").permitAll()
+                        .requestMatchers(HttpMethod.POST, studentAuth + "/requestPasswordOtp").permitAll()
+                        .requestMatchers(HttpMethod.POST, studentAuth + "/resetPasswordWithOtp").permitAll()
                         .requestMatchers(studentAuth + "/meStudent").authenticated()
                         .requestMatchers(HttpMethod.POST, studentAuth + "/logoutStudent").authenticated()
 
                         // ── INSTRUCTOR AUTH ───────────────────────────────────────
                         .requestMatchers(HttpMethod.POST, instructorAuth + "/instructorLogin").permitAll()
+                        .requestMatchers(HttpMethod.POST, instructorAuth + "/recoverPassword").permitAll()
+                        .requestMatchers(HttpMethod.POST, instructorAuth + "/requestPasswordOtp").permitAll()
+                        .requestMatchers(HttpMethod.POST, instructorAuth + "/resetPasswordWithOtp").permitAll()
                         .requestMatchers(instructorAuth + "/meInstructor").authenticated()
                         .requestMatchers(HttpMethod.POST, instructorAuth + "/logoutInstructor").authenticated()
 
                         // ── PARENT AUTH (NUEVO) ───────────────────────────────────
                         .requestMatchers(HttpMethod.POST, parentAuth + "/parentLogin").permitAll()
                         .requestMatchers(HttpMethod.POST, parentAuth + "/registerParent").permitAll()
+                        .requestMatchers(HttpMethod.POST, parentAuth + "/recoverPassword").permitAll()
+                        .requestMatchers(HttpMethod.POST, parentAuth + "/requestPasswordOtp").permitAll()
+                        .requestMatchers(HttpMethod.POST, parentAuth + "/resetPasswordWithOtp").permitAll()
                         .requestMatchers(parentAuth + "/meParent").authenticated()
                         .requestMatchers(HttpMethod.POST, parentAuth + "/logoutParent").authenticated()
 

@@ -22,6 +22,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j @Service
 public class StudentService {
@@ -188,6 +191,36 @@ public class StudentService {
             log.error("Estudiante no encontrado");
             return false;
         }
+    }
+
+    public Map<String, Object> bulkCreateStudents(List<StudentDTO> students) {
+        List<Map<String, Object>> errors = new ArrayList<>();
+        int created = 0;
+
+        if (students == null || students.isEmpty()) {
+            return Map.of("created", 0, "errors", List.of(Map.of("message", "No se recibieron estudiantes")));
+        }
+
+        for (int i = 0; i < students.size(); i++) {
+            StudentDTO dto = students.get(i);
+            try {
+                createStudent(dto);
+                created++;
+            } catch (Exception e) {
+                errors.add(Map.of(
+                        "index", i,
+                        "studentCard", dto != null ? dto.getStudentCard() : null,
+                        "email", dto != null ? dto.getEmail() : null,
+                        "message", e.getMessage()
+                ));
+            }
+        }
+
+        return Map.of(
+                "created", created,
+                "received", students.size(),
+                "errors", errors
+        );
     }
 
 //*** MÉTODOS COMPLEMENTARIOS***\\

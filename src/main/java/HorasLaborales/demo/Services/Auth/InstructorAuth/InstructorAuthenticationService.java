@@ -2,7 +2,10 @@ package HorasLaborales.demo.Services.Auth.InstructorAuth;
 
 import HorasLaborales.demo.Config.Crypto.Argon2Password;
 import HorasLaborales.demo.Entities.Instructors.InstructorEntity;
+import HorasLaborales.demo.Services.Auth.PasswordRecoveryService;
+import HorasLaborales.demo.Services.Email.EmailService;
 import HorasLaborales.demo.Repositories.Instructors.InstructorRepository;
+import HorasLaborales.demo.Utils.PasswordGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +19,12 @@ public class InstructorAuthenticationService {
      */
     @Autowired
     private InstructorRepository instructorRepository;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private PasswordRecoveryService passwordRecoveryService;
 
     /**
      * Verifica las credenciales de un instructor usando Argon2.
@@ -72,6 +81,43 @@ public class InstructorAuthenticationService {
         }
 
         instructor.setPassword(objHash.EncryptPassword(newPassword));
+        instructorRepository.save(instructor);
+        return true;
+    }
+
+    public boolean recoverInstructorPassword(String email) {
+        InstructorEntity instructor = instructorRepository.findByEmail(email).orElse(null);
+        if (instructor == null) return false;
+
+        String tempPassword = PasswordGenerator.generateSecurePassword(10);
+        instructor.setPassword(new Argon2Password().EncryptPassword(tempPassword));
+        instructorRepository.save(instructor);
+
+        String roleName = instructor.getRoleId() != null ? instructor.getRoleId().getRoleName() : "Instructor";
+        String subject = "Recuperación de contraseña";
+        String body = "Se generó una contraseña temporal para tu cuenta de " + roleName + ".";
+        String details = "Usuario: " + instructor.getEmail() + "<br>Contraseña temporal: <b>" + tempPassword + "</b><br><br>Te recomendamos cambiarla después de iniciar sesión.";
+        emailService.enviarNotificacionConDetalles(instructor.getEmail(), subject, body, details);
+        return true;
+    }
+
+    public boolean requestInstructorPasswordOtp(String email) {
+        InstructorEntity instructor = instructorRepository.findByEmail(email).orElse(null);
+        if (instructor == null) return false;
+
+        String roleName = instructor.getRoleId() != null ? instructor.getRoleId().getRoleName() : "personal";
+        passwordRecoveryService.sendOtp("instructor", instructor.getEmail(), roleName);
+        return true;
+    }
+
+    public boolean resetInstructorPasswordWithOtp(String email, String otp, String newPassword) {
+        if (newPassword == null || newPassword.length() < 8) return false;
+
+        InstructorEntity instructor = instructorRepository.findByEmail(email).orElse(null);
+        if (instructor == null) return false;
+        if (!passwordRecoveryService.verifyAndConsume("instructor", instructor.getEmail(), otp)) return false;
+
+        instructor.setPassword(new Argon2Password().EncryptPassword(newPassword));
         instructorRepository.save(instructor);
         return true;
     }

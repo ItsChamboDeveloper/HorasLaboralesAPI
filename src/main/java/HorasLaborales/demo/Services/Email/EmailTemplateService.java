@@ -135,7 +135,7 @@ public class EmailTemplateService {
             html.append("<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:24px;\">");
             html.append("<tr><td style=\"background-color:#F9FAFB;border-left:4px solid ").append(colorPrimario).append(";padding:16px 20px;border-radius:0 8px 8px 0;\">");
             html.append("<p style=\"margin:0 0 4px;color:#6B7280;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;\">Detalles Adicionales</p>");
-            html.append("<p style=\"margin:0;color:#374151;font-size:14px;line-height:1.6;\">").append(escapeHtml(detalles)).append("</p>");
+            html.append("<p style=\"margin:0;color:#374151;font-size:14px;line-height:1.6;\">").append(detalles).append("</p>");
             html.append("</td></tr>");
             html.append("</table>");
         }

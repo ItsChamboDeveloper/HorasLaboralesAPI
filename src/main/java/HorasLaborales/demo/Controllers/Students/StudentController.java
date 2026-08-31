@@ -13,6 +13,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -211,5 +212,11 @@ public class StudentController {
                     "detail", e.getMessage() // Detalles técnicos (para debugging)
             ));
         }
+    }
+
+    @PostMapping("/bulkStudents")
+    public ResponseEntity<?> bulkCreateStudents(@RequestBody List<StudentDTO> students) {
+        Map<String, Object> result = studentService.bulkCreateStudents(students);
+        return ResponseEntity.ok(ApiResponse.success("Proceso masivo completado", result));
     }
 }
