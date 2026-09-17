@@ -153,14 +153,23 @@ public class JwtCookieAuthFilter extends OncePerRequestFilter {
         return
                 ("OPTIONS".equals(method)) ||
                 (path.equals("/api/studentsAuth/studentLogin") && "POST".equals(method)) ||
+                (path.equals("/api/studentsAuth/recoverPassword") && "POST".equals(method)) ||
+                (path.equals("/api/studentsAuth/requestPasswordOtp") && "POST".equals(method)) ||
+                (path.equals("/api/studentsAuth/resetPasswordWithOtp") && "POST".equals(method)) ||
                 (path.equals("/api/instructorsAuth/instructorLogin") && "POST".equals(method)) ||
+                (path.equals("/api/instructorsAuth/recoverPassword") && "POST".equals(method)) ||
+                (path.equals("/api/instructorsAuth/requestPasswordOtp") && "POST".equals(method)) ||
+                (path.equals("/api/instructorsAuth/resetPasswordWithOtp") && "POST".equals(method)) ||
                 // *** NUEVO: si no se agrega esta línea, el login de papás
                 // siempre responderá 401 "Token no encontrado" antes de
                 // siquiera intentar validar el correo/password, porque este
                 // filtro corre ANTES que las reglas de SecurityConfig. ***
                 (path.equals("/api/parentsAuth/parentLogin") && "POST".equals(method)) ||
                 // *** NUEVO: mismo caso para el autoregistro de papás/mamás ***
-                (path.equals("/api/parentsAuth/registerParent") && "POST".equals(method));
+                (path.equals("/api/parentsAuth/registerParent") && "POST".equals(method)) ||
+                (path.equals("/api/parentsAuth/recoverPassword") && "POST".equals(method)) ||
+                (path.equals("/api/parentsAuth/requestPasswordOtp") && "POST".equals(method)) ||
+                (path.equals("/api/parentsAuth/resetPasswordWithOtp") && "POST".equals(method));
 
     }
 

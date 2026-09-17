@@ -225,4 +225,49 @@ public class StudentAuthenticationController {
         }
     }
 
+    @PostMapping("/recoverPassword")
+    public ResponseEntity<?> recoverStudentPassword(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "El correo es obligatorio"));
+        }
+
+        boolean success = studentAuthenticationService.recoverStudentPassword(email);
+        if (success) {
+            return ResponseEntity.ok(Map.of("message", "Se envió una contraseña temporal al correo registrado"));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "No se encontró un estudiante con ese correo"));
+    }
+
+    @PostMapping("/requestPasswordOtp")
+    public ResponseEntity<?> requestStudentPasswordOtp(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "El correo es obligatorio"));
+        }
+
+        boolean success = studentAuthenticationService.requestStudentPasswordOtp(email);
+        if (success) {
+            return ResponseEntity.ok(Map.of("message", "Se envió un código OTP al correo registrado"));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "No se encontró un estudiante con ese correo"));
+    }
+
+    @PostMapping("/resetPasswordWithOtp")
+    public ResponseEntity<?> resetStudentPasswordWithOtp(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        String otp = payload.get("otp");
+        String newPassword = payload.get("newPassword");
+
+        if (email == null || email.isBlank() || otp == null || otp.isBlank() || newPassword == null || newPassword.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Correo, código OTP y nueva contraseña son obligatorios"));
+        }
+
+        boolean success = studentAuthenticationService.resetStudentPasswordWithOtp(email, otp, newPassword);
+        if (success) {
+            return ResponseEntity.ok(Map.of("message", "Contraseña actualizada exitosamente"));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Código OTP inválido, vencido o contraseña no válida"));
+    }
+
 }

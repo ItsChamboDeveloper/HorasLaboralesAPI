@@ -2,7 +2,10 @@ package HorasLaborales.demo.Services.Auth.EstudentsAuth;
 
 import HorasLaborales.demo.Config.Crypto.Argon2Password;
 import HorasLaborales.demo.Entities.Students.StudentEntity;
+import HorasLaborales.demo.Services.Auth.PasswordRecoveryService;
+import HorasLaborales.demo.Services.Email.EmailService;
 import HorasLaborales.demo.Repositories.Students.StudentsRepository;
+import HorasLaborales.demo.Utils.PasswordGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +19,12 @@ public class StudentAuthenticationService {
      */
     @Autowired
     private StudentsRepository studentsRepository;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private PasswordRecoveryService passwordRecoveryService;
 
     /**
      * Verifica las credenciales de un estudiante usando Argon2.
@@ -70,6 +79,41 @@ public class StudentAuthenticationService {
         }
 
         student.setPassword(objHash.EncryptPassword(newPassword));
+        studentsRepository.save(student);
+        return true;
+    }
+
+    public boolean recoverStudentPassword(String email) {
+        StudentEntity student = studentsRepository.findByEmail(email).orElse(null);
+        if (student == null) return false;
+
+        String tempPassword = PasswordGenerator.generateSecurePassword(10);
+        student.setPassword(new Argon2Password().EncryptPassword(tempPassword));
+        studentsRepository.save(student);
+
+        String subject = "Recuperación de contraseña";
+        String body = "Se generó una contraseña temporal para tu cuenta de estudiante.";
+        String details = "Usuario: " + student.getEmail() + "<br>Contraseña temporal: <b>" + tempPassword + "</b><br><br>Te recomendamos cambiarla después de iniciar sesión.";
+        emailService.enviarNotificacionConDetalles(student.getEmail(), subject, body, details);
+        return true;
+    }
+
+    public boolean requestStudentPasswordOtp(String email) {
+        StudentEntity student = studentsRepository.findByEmail(email).orElse(null);
+        if (student == null) return false;
+
+        passwordRecoveryService.sendOtp("student", student.getEmail(), "estudiante");
+        return true;
+    }
+
+    public boolean resetStudentPasswordWithOtp(String email, String otp, String newPassword) {
+        if (newPassword == null || newPassword.length() < 8) return false;
+
+        StudentEntity student = studentsRepository.findByEmail(email).orElse(null);
+        if (student == null) return false;
+        if (!passwordRecoveryService.verifyAndConsume("student", student.getEmail(), otp)) return false;
+
+        student.setPassword(new Argon2Password().EncryptPassword(newPassword));
         studentsRepository.save(student);
         return true;
     }
