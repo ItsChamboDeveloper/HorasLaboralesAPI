@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Environment ###
+.env
+
+### Oracle Wallet ###
+Wallet_SGMA/

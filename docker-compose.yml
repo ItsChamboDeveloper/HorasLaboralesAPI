@@ -1,0 +1,16 @@
+services:
+  api:
+    build: .
+    container_name: horas-laborales-api
+
+    ports:
+      - "8080:8080"
+
+    env_file:
+      - .env
+
+    environment:
+      TNS_ADMIN: /app/wallet
+
+    volumes:
+      - "./Wallet_SGMA:/app/wallet:ro"
